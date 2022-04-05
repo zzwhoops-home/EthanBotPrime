@@ -44,7 +44,7 @@ async def on_ready():
     )
 
 @bot.command(name="set")
-@commands.cooldown(1, 5, commands.BucketType.user)
+@commands.cooldown(1, 3, commands.BucketType.user)
 async def set_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
     limit = 1000000
@@ -114,7 +114,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {currency}.")
 
 @bot.command(name="edit", aliases=["add"])
-@commands.cooldown(1, 5, commands.BucketType.user)
+@commands.cooldown(1, 3, commands.BucketType.user)
 async def edit_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
     limit = 10000
@@ -216,7 +216,7 @@ async def view_balance(ctx, member: discord.Member = None):
     await ctx.channel.send(embed=embed)
 
 @bot.command(name="leaderboard", aliases=["top", "rich"])
-@commands.cooldown(1, 5, commands.BucketType.user)
+@commands.cooldown(1, 3, commands.BucketType.user)
 async def leaderboard(ctx, currency = ""):
     member = ctx.author
     types = ["token", "coin"]
