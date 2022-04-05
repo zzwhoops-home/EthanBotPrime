@@ -252,6 +252,37 @@ async def leaderboard(ctx, currency = ""):
     embed = discord.Embed(title=f"{ctx.guild.name}'s {currency.capitalize()} Leaderboard", description=description)
     await ctx.channel.send(embed=embed)   
 
+@bot.command(name="HYPERINFLATION", aliases=["inflate"])
+@commands.cooldown(1, 30, commands.BucketType.guild)
+async def hyperinflation(ctx, currency = "", multi = 0.0):
+    types = ["tokens", "coins"]
+
+    if (currency == ""):
+        await ctx.channel.send("Well pick a currency to inflate, idiot")
+    if (currency not in types):
+        await ctx.channel.send(f"Ethan{currency}:tm: doesn't exist. Nice try!")
+    if (ctx.author.id != 390601966423900162):
+        await ctx.channel.send("Only Ethan can cause hyperinflation")
+        return
+    if (multi <= 0.0):
+        await ctx.channel.send("Canceling EthanCurrency, are you? Enter a number above 0 dumbass")
+        return
+    elif (multi == 1.0):
+        await ctx.channel.send("I mean, okay, sure, but you do realize this changes jackshit right")
+        return
+    elif (multi > 1000.0):
+        await ctx.channel.send("Stop or I will stab EthanCurrency with a rusty knife")
+        return
+
+    data = {
+        "$mul":
+        {
+            currency: multi
+        }
+    }
+    ethan_tokens.update_many(update=data)
+    
+
 @bot.command(name="roll", aliases=['dice', 'r'])
 async def roll(ctx, number=str(100)):
     try:
@@ -311,20 +342,22 @@ async def activate_pp():
 
 WHEN = datetime.time(20, 00, 00)
 async def pping():
-    while True:
-        now = datetime.datetime.utcnow() # You can do now() or a specific timezone if that matters, but I'll leave it with utcnow
-        target_time = datetime.datetime.combine(now.date(), WHEN)  # 6:00 PM today (In UTC)
-        seconds_until_target = -1
-        if (seconds_until_target < 0):
-            target_time = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time(second=1))
-            seconds_until_target = (target_time - now).total_seconds()
+    now = datetime.datetime.utcnow()
+    target = datetime.datetime.combine(now.date(), WHEN)
+    seconds_until_target = (target - now).total_seconds()
+
+    if (seconds_until_target < 0):
+        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), WHEN)
+        seconds_until_target = (target - now).total_seconds()
         print(f"Seconds until target: {seconds_until_target}")
-        await asyncio.sleep(seconds_until_target)  # Sleep until we hit the target time
-        await activate_pp()  # Call the helper function that sends the message
-        tomorrow = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time(second=1))
-        seconds = (tomorrow - now).total_seconds()  # Seconds until tomorrow (midnight)
-        print(f"Seconds until tmr: {seconds}")
-        await asyncio.sleep(seconds)   # Sleep until tomorrow and then the loop will start a new iteration
+
+    await asyncio.sleep(seconds_until_target)
+    await activate_pp()
+    while True:
+        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), WHEN)
+        seconds_until_target = (target - now).total_seconds()
+        await activate_pp()
+        await asyncio.sleep(seconds_until_target)
 
 async def add_froligarchs(guild, members):
     role = guild.get_role(841482931255115816)
@@ -432,7 +465,7 @@ async def eliminate(ctx, member: discord.Member):
     await ctx.channel.send('lmao fuck u get eliminated')
     await member.edit(nick="Eliminated")
     await asyncio.sleep(9)
-    await ctx.channel.send('oh wait nvm, zzwhoops told me not to hurt anyone')
+    await ctx.channel.send('oh wait nvm, zzwhoops told me odro days are over.')
     await asyncio.sleep(3)
     await ctx.channel.send('sorry!')
     await asyncio.sleep(1)
@@ -471,6 +504,20 @@ async def on_message(message):
     if (message.author.id == 501505695091392527):
         if 'sister' in message.content:
             await message.channel.send("<:sexualrelations:803707185963991081>")
+        if 'request' in message.content.replace(" ", "") and 'parsfuk' in message.content.replace(" ", ""):
+            for x in range(7):
+                await message.channel.send("https://tenor.com/bMkPz.gif")
+            embed = discord.Embed(title="No, Sam, #parsfuk **WILL NOT** be ***FUCKING LIBERATED***", description="__***DENIED***__")
+            await message.channel.send(embed=embed)
+        if "fight" in message.content.replace(" ", "") and "continue" in message.content.replace(" ", ""):
+            embed = discord.Embed(title="*Not after I'm done with you*...")
+            await message.channel.send(embed=embed)
+            await asyncio.sleep(2)
+            await message.channel.send(f"**Acquiring location of user {message.author.mention}...**")
+            await asyncio.sleep(5)
+            await message.channel.send("**Location found!**")
+            await asyncio.sleep(1)
+            await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
 
     await bot.process_commands(message)
 
