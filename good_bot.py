@@ -48,13 +48,13 @@ async def on_ready():
 async def set_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
     limit = 1000000
-    types = ["token", "coin"]
+    types = ["tokens", "coins"]
 
     if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Only Ethan can use this dumbass")
         return
     if (currency not in types):
-        await ctx.channel.send("Kid you gotta say 'token' or 'coin' so I know which to add")
+        await ctx.channel.send("Kid you gotta say 'tokens' or 'coins' so I know which to add")
         return
     if (abs(amount) > limit):
         await ctx.channel.send(f"Hey, you tryna devalue Ethan currencies?\nEnter a number between {-limit:,} and {limit:,}.")
@@ -72,10 +72,10 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
         }
         await asyncio.sleep(2)
         await ctx.channel.send(f"Account created!")
-        if (currency == "token"):
+        if (currency == "tokens"):
             data["tokens"] = amount
             symbol = "<:ethanger:763411726741143572>"
-        if (currency == "coin"):
+        if (currency == "coins"):
             data["coins"] = amount
             symbol = "<:ethoggers:868201785301561394>"
         ethan_tokens.insert_one(data)        
@@ -84,7 +84,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
         query = {
             "id": id
         }
-        if (currency == "token"):
+        if (currency == "tokens"):
             cur_balance = existing["tokens"]
             new_balance = amount
             data = {
@@ -95,7 +95,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-        if (currency == "coin"):
+        if (currency == "coins"):
             cur_balance = existing["coins"]
             new_balance = amount
             data = {
@@ -106,9 +106,9 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)        
-        if currency == "token":
+        if currency == "tokens":
             currency = "<:ethanger:763411726741143572>"
-        elif currency == "coin":
+        elif currency == "coins":
             currency = "<:ethoggers:868201785301561394>"
 
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {currency}.")
@@ -118,13 +118,13 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
 async def edit_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
     limit = 10000
-    types = ["token", "coin"]
+    types = ["tokens", "coins"]
 
     if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Only Ethan can use this dumbass")
         return
     if (currency not in types):
-        await ctx.channel.send("Kid you gotta say 'token' or 'coin' so I know which to add")
+        await ctx.channel.send("Kid you gotta say 'tokens' or 'coins' so I know which to add")
         return
     if (abs(amount) > limit):
         await ctx.channel.send(f"Hey, you tryna cause hyperinflation or something dumbass?\nEnter a number between {-limit:,} and {limit:,}.")
@@ -142,10 +142,10 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
         }
         await asyncio.sleep(2)
         await ctx.channel.send(f"Account created!")
-        if (currency == "token"):
+        if (currency == "tokens"):
             data["tokens"] = amount
             symbol = "<:ethanger:763411726741143572>"
-        if (currency == "coin"):
+        if (currency == "coins"):
             data["coins"] = amount
             symbol = "<:ethoggers:868201785301561394>"
         ethan_tokens.insert_one(data)        
@@ -154,7 +154,7 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
         query = {
             "id": id
         }
-        if (currency == "token"):
+        if (currency == "tokens"):
             cur_balance = existing["tokens"]
             new_balance = cur_balance + amount
             data = {
@@ -165,7 +165,7 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-        if (currency == "coin"):
+        if (currency == "coins"):
             cur_balance = existing["coins"]
             new_balance = cur_balance + amount
             data = {
@@ -176,9 +176,9 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-        if currency == "token":
+        if currency == "tokens":
             symbol = "<:ethanger:763411726741143572>"
-        elif currency == "coin":
+        elif currency == "coins":
             symbol = "<:ethoggers:868201785301561394>"
 
         if (amount < 0):
@@ -219,27 +219,35 @@ async def view_balance(ctx, member: discord.Member = None):
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def leaderboard(ctx, currency = ""):
     member = ctx.author
-    types = ["token", "coin"]
+    types = ["tokens", "coins"]
     if currency not in types:
-        await ctx.channel.send("You have to specify either 'token' or 'coin', dimwit")
+        await ctx.channel.send("You have to specify either 'tokens' or 'coins', dimwit")
         return
     
     description = ""
     count = 0
-    if currency == "token":
+    if currency == "tokens":
         accounts = ethan_tokens.find().sort("tokens", pymongo.DESCENDING).limit(7)
         for account in accounts:
+            if (account['name'] == f"{member.name}#{member.discriminator}"):
+                is_user = "***"
+            else:
+                is_user = ""
             if (account['tokens'] == 0):
                 break
             count += 1
-            description += f"**#{count}**: `{account['tokens']:,.2f}`  <:ethanger:763411726741143572> - {account['name']}\n"
-    elif currency == "coin":
+            description += f"**#{count}**: `{account['tokens']:,.2f}`<:ethanger:763411726741143572> - {is_user}{account['name']}{is_user}\n"
+    elif currency == "coins":
         accounts = ethan_tokens.find().sort("coins", pymongo.DESCENDING).limit(7)
         for account in accounts:
+            if (account['name'] == f"{member.name}#{member.discriminator}"):
+                is_user = "***"
+            else:
+                is_user = ""
             if (account['coins'] == 0):
                 break
             count += 1
-            description += f"**#{count}**: `{account['coins']:,.2f}`  <:ethoggers:868201785301561394> - {account['name']}\n"
+            description += f"**#{count}**: `{account['coins']:,.2f}`<:ethoggers:868201785301561394> - {is_user}{account['name']}{is_user}\n"
 
     embed = discord.Embed(title=f"{ctx.guild.name}'s {currency.capitalize()} Leaderboard", description=description)
     await ctx.channel.send(embed=embed)   
