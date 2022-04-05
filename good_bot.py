@@ -105,7 +105,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
                     "coins": new_balance
                 }
             }
-            ethan_tokens.update_one(query, data)        
+            ethan_tokens.update_one(query, data)
         if currency == "tokens":
             currency = "<:ethanger:763411726741143572>"
         elif currency == "coins":
@@ -256,13 +256,16 @@ async def leaderboard(ctx, currency = ""):
 @commands.cooldown(1, 30, commands.BucketType.guild)
 async def hyperinflation(ctx, currency = "", multi = 0.0):
     types = ["tokens", "coins"]
-
-    if (currency == ""):
-        await ctx.channel.send("Well pick a currency to inflate, idiot")
-    if (currency not in types):
-        await ctx.channel.send(f"Ethan{currency}:tm: doesn't exist. Nice try!")
+    """
     if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Only Ethan can cause hyperinflation")
+        return
+        """
+    if (currency == ""):
+        await ctx.channel.send("Well pick a currency to inflate, idiot")
+        return
+    if (currency not in types):
+        await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try!")
         return
     if (multi <= 0.0):
         await ctx.channel.send("Canceling EthanCurrency, are you? Enter a number above 0 dumbass")
@@ -271,7 +274,7 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
         await ctx.channel.send("I mean, okay, sure, but you do realize this changes jackshit right")
         return
     elif (multi > 1000.0):
-        await ctx.channel.send("Stop or I will stab EthanCurrency with a rusty knife")
+        await ctx.channel.send("Stop or I will stab EthanCurrency with a rusty knife before you do")
         return
 
     data = {
@@ -280,8 +283,13 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
             currency: multi
         }
     }
-    ethan_tokens.update_many(update=data)
-    
+    ethan_tokens.update_many(filter={"$not":{currency: 0}}, update=data)
+
+    if currency == "tokens":
+        currency = "<:ethanger:763411726741143572>"
+    elif currency == "coins":
+        currency = "<:ethoggers:868201785301561394>"
+    await ctx.channel.send(f"Okay, I've inflated {currency} by {multi}. I hope you know what you're doing...")
 
 @bot.command(name="roll", aliases=['dice', 'r'])
 async def roll(ctx, number=str(100)):
