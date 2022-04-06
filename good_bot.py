@@ -439,18 +439,20 @@ WHEN = datetime.time(20, 00, 00)
 async def pping():
     now = datetime.datetime.utcnow()
     target = datetime.datetime.combine(now.date(), WHEN)
-    seconds_until_target = (target - now).total_seconds()
+    seconds_until_target = math.ceil((target - now).total_seconds())
+    print(f"Seconds until target 1: {seconds_until_target}")
 
     if (seconds_until_target < 0):
         target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), WHEN)
-        seconds_until_target = (target - now).total_seconds()
-        print(f"Seconds until target: {seconds_until_target}")
+        seconds_until_target = math.ceil((target - now).total_seconds())
+        print(f"Seconds until target 2: {seconds_until_target}")
 
     await asyncio.sleep(seconds_until_target)
     await activate_pp()
     while True:
+        print(f"Seconds until target 3: {seconds_until_target}")
         target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), WHEN)
-        seconds_until_target = (target - now).total_seconds()
+        seconds_until_target = math.ceil((target - now).total_seconds())
         await activate_pp()
         await asyncio.sleep(seconds_until_target)
 
