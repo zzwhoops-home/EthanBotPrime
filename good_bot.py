@@ -91,7 +91,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
             data["tokens"] = amount
         if (currency == "coins"):
             data["coins"] = amount
-        symbol = get_symbol(currency)
+        symbol = await get_symbol(currency)
         ethan_tokens.insert_one(data)        
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
     else:
@@ -118,7 +118,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-            symbol = get_symbol(currency)
+            symbol = await get_symbol(currency)
 
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
 
@@ -177,7 +177,7 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-            symbol = get_symbol(currency)
+            symbol = await get_symbol(currency)
 
         if (amount < 0):
             await ctx.channel.send(f"Okay, I've taken **{amount:,.2f}** {symbol} from {member.mention}.\nThey now have **{new_balance:,.2f}** {symbol}.")
@@ -284,7 +284,7 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
     }
     ethan_tokens.update_many(filter={currency:{"$not":{"$eq":0}}}, update=data)
 
-    symbol = get_symbol(currency)
+    symbol = await get_symbol(currency)
     await ctx.channel.send(f"Okay, I've inflated {symbol} by {multi}. I hope you know what you're doing...")
 
 @bot.command(name="luckynumbers", aliases=["lnums", "ln", "luckynums"])
@@ -303,7 +303,7 @@ async def lucky_numbers(ctx, currency = "", amount = 0.0):
     if (balance < amount):
         await ctx.channel.send(f"You don't have that much money idiot")
         return
-    symbol = get_symbol(currency)
+    symbol = await get_symbol(currency)
     await ctx.channel.send(f"Gambling **{amount:,.2f}**{symbol}. Choose a number from 1-10! Type 'e' to exit.")
 
     def check(m):
@@ -331,22 +331,18 @@ async def lucky_numbers(ctx, currency = "", amount = 0.0):
             change = amount * (percent / 100)
             await ctx.channel.send("https://ih1.redbubble.net/image.724682828.9041/flat,1000x1000,075,f.jpg")
             await ctx.channel.send(f"Spot on! Congratulations, you've won **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
-            await asyncio.sleep(1)
         elif (difference == 1):
             percent = random.randint(125, 165)
             change = amount * (percent / 100)
             await ctx.channel.send(f"I mean, you were pretty close. You get... a lil bit: **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
-            await asyncio.sleep(1)
         elif (difference == 2 or difference == 3):
             percent = random.randint(30, 99)
             change = amount * (percent / 100)
             await ctx.channel.send(f"You weren't that close, so I'll just give you some of your money back: **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
-            await asyncio.sleep(1)
         else:
             change = 0
             await ctx.channel.send("https://imgur.com/a/vlkjkxv")
             await ctx.channel.send(f"lmao you suck, I'll be taking **{amount:,.2f}**{symbol}")
-            await asyncio.sleep(1)
 
         member = ctx.author
         new_balance = balance + (change - amount)
@@ -374,6 +370,7 @@ async def lucky_numbers(ctx, currency = "", amount = 0.0):
             }
         ethan_tokens.update_one(query, data)
             
+        await asyncio.sleep(1)
         await ctx.channel.send(f"You now have **{new_balance:,.2f}**{symbol}")
     except asyncio.TimeoutError:
         await ctx.channel.send("Type at most **TWO NUMBERS** in *30* seconds **ITS NOT THAT HARD**.\nI should just take your money but... that would be a scam. EthanBot does not scam.")    
