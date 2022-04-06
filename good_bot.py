@@ -1,4 +1,5 @@
 # bot.py
+import json
 import os
 import random
 import asyncio
@@ -8,6 +9,7 @@ import math
 import pymongo
 from pymongo import MongoClient
 from pprint import pprint
+import requests
 
 import discord
 from discord.ext import commands
@@ -21,7 +23,7 @@ USER = os.getenv('USER')
 PWD = os.getenv('PWD')
 
 guild = None
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 
 prefix = "eb!"
@@ -43,6 +45,27 @@ async def on_ready():
         f'{guild.name} (id: {guild.id})\n'
     )
 
+async def create_account(ctx):
+    member = ctx.member    
+    tokens = 0.00
+    coins = 0.00
+    await ctx.channel.send(f"Records not found... creating account for {member.mention}.")
+    data = {
+        "id": id,
+        "name": f"{member.name}#{member.discriminator}",
+        "tokens": tokens,
+        "coins": coins
+    }
+    await asyncio.sleep(2)
+    await ctx.channel.send(f"Account created!")
+    ethan_tokens.insert_one(data)
+
+async def get_symbol(currency):
+    if currency == "tokens":
+        return("<:ethanger:763411726741143572>")
+    elif currency == "coins":
+        return("<:ethoggers:868201785301561394>")
+
 @bot.command(name="set")
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def set_balance(ctx, currency, member: discord.Member, amount):
@@ -63,21 +86,12 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
     id = member.id
     existing = ethan_tokens.find_one({"id": id})
     if existing == None:
-        await ctx.channel.send(f"Records not found... creating account for {member.mention}.")
-        data = {
-            "id": id,
-            "name": f"{member.name}#{member.discriminator}",
-            "tokens": 0.00,
-            "coins": 0.00
-        }
-        await asyncio.sleep(2)
-        await ctx.channel.send(f"Account created!")
+        await create_account(ctx)
         if (currency == "tokens"):
             data["tokens"] = amount
-            symbol = "<:ethanger:763411726741143572>"
         if (currency == "coins"):
             data["coins"] = amount
-            symbol = "<:ethoggers:868201785301561394>"
+        symbol = get_symbol(currency)
         ethan_tokens.insert_one(data)        
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
     else:
@@ -104,10 +118,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-        if currency == "tokens":
-            symbol = "<:ethanger:763411726741143572>"
-        elif currency == "coins":
-            symbol = "<:ethoggers:868201785301561394>"
+            symbol = get_symbol(currency)
 
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
 
@@ -131,15 +142,7 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
     id = member.id
     existing = ethan_tokens.find_one({"id": id})
     if existing == None:
-        await ctx.channel.send(f"Records not found... creating account for {member.mention}.")
-        data = {
-            "id": id,
-            "name": f"{member.name}#{member.discriminator}",
-            "tokens": 0.00,
-            "coins": 0.00
-        }
-        await asyncio.sleep(2)
-        await ctx.channel.send(f"Account created!")
+        await create_account(ctx)
         if (currency == "tokens"):
             data["tokens"] = amount
             symbol = "<:ethanger:763411726741143572>"
@@ -174,10 +177,7 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-        if currency == "tokens":
-            symbol = "<:ethanger:763411726741143572>"
-        elif currency == "coins":
-            symbol = "<:ethoggers:868201785301561394>"
+            symbol = get_symbol(currency)
 
         if (amount < 0):
             await ctx.channel.send(f"Okay, I've taken **{amount:,.2f}** {symbol} from {member.mention}.\nThey now have **{new_balance:,.2f}** {symbol}.")
@@ -194,16 +194,8 @@ async def view_balance(ctx, member: discord.Member = None):
     tokens = 0.00
     coins = 0.00
     if existing == None:
-        await ctx.channel.send(f"Records not found... creating account for {member.mention}.")
-        data = {
-            "id": id,
-            "name": f"{member.name}#{member.discriminator}",
-            "tokens": tokens,
-            "coins": coins
-        }
-        await asyncio.sleep(2)
-        await ctx.channel.send(f"Account created!")
-        ethan_tokens.insert_one(data)
+        await create_account(ctx
+        )
     else:
         tokens = f"{existing['tokens']:,.2f}"
         coins = f"{existing['coins']:,.2f}"
@@ -212,6 +204,16 @@ async def view_balance(ctx, member: discord.Member = None):
     embed.add_field(name="<:ethanger:763411726741143572> (ET)", value=tokens, inline=True)        
     embed.add_field(name="<:ethoggers:868201785301561394> (EC)", value=coins, inline=True)
     await ctx.channel.send(embed=embed)
+
+@bot.command(name="pay", aliases=["donate", "give"])
+async def pay(ctx, member: discord.Member = None, amount = 0.0):
+    if (member == None):
+        await ctx.channel.send("Who you payin', yourself? That ain't how it works.")
+        return
+    if (amount <= 0.0):
+        await ctx.channel.send("Hey you gotta *pay* the person a positive number that isn't 0 bitch")
+        return
+    
 
 @bot.command(name="leaderboard", aliases=["top", "rich"])
 @commands.cooldown(1, 3, commands.BucketType.user)
@@ -282,14 +284,11 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
     }
     ethan_tokens.update_many(filter={currency:{"$not":{"$eq":0}}}, update=data)
 
-    if currency == "tokens":
-        symbol = "<:ethanger:763411726741143572>"
-    elif currency == "coins":
-        symbol = "<:ethoggers:868201785301561394>"
+    symbol = get_symbol(currency)
     await ctx.channel.send(f"Okay, I've inflated {symbol} by {multi}. I hope you know what you're doing...")
 
 @bot.command(name="luckynumbers", aliases=["lnums", "ln", "luckynums"])
-@commands.cooldown(1, 10, commands.BucketType.user)
+@commands.cooldown(1, 5, commands.BucketType.user)
 async def lucky_numbers(ctx, currency = "", amount = 0.0):
     types = ["tokens", "coins"]
     
@@ -301,13 +300,10 @@ async def lucky_numbers(ctx, currency = "", amount = 0.0):
         return
     
     balance = ethan_tokens.find_one({"id": ctx.author.id})[currency]
-    if (balance <= amount):
+    if (balance < amount):
         await ctx.channel.send(f"You don't have that much money idiot")
         return
-    if currency == "tokens":
-        symbol = "<:ethanger:763411726741143572>"
-    elif currency == "coins":
-        symbol = "<:ethoggers:868201785301561394>"
+    symbol = get_symbol(currency)
     await ctx.channel.send(f"Gambling **{amount:,.2f}**{symbol}. Choose a number from 1-10! Type 'e' to exit.")
 
     def check(m):
@@ -331,17 +327,17 @@ async def lucky_numbers(ctx, currency = "", amount = 0.0):
         await ctx.channel.send(f"The number was **{number}**. Your guess, **{guess}** was **{difference}** off.")
 
         if (difference == 0):
-            percent = random.randint(160, 225)
+            percent = random.randint(175, 300)
             change = amount * (percent / 100)
             await ctx.channel.send("https://ih1.redbubble.net/image.724682828.9041/flat,1000x1000,075,f.jpg")
             await ctx.channel.send(f"Spot on! Congratulations, you've won **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
             await asyncio.sleep(1)
         elif (difference == 1):
-            percent = random.randint(101, 140)
+            percent = random.randint(125, 165)
             change = amount * (percent / 100)
             await ctx.channel.send(f"I mean, you were pretty close. You get... a lil bit: **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
             await asyncio.sleep(1)
-        elif (difference == 2):
+        elif (difference == 2 or difference == 3):
             percent = random.randint(30, 99)
             change = amount * (percent / 100)
             await ctx.channel.send(f"You weren't that close, so I'll just give you some of your money back: **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
@@ -572,6 +568,14 @@ async def eliminate(ctx, member: discord.Member):
 
     await ctx.message.delete()
 
+@bot.command(name="randomword", aliases=["random", "rword"])
+@commands.cooldown(1, 2, commands.BucketType.user)
+async def random_word(ctx):
+    req = requests.get("https://random-word-api.herokuapp.com/word?number=1")
+    words = json.loads(req.text)
+    word = random.choice(words)
+    await ctx.channel.send(f"Your word is: {word}")
+
 @bot.event
 async def on_message(message):
     if (message.content[:5].strip() == prefix):
@@ -598,17 +602,17 @@ async def on_message(message):
         if 'sad' in message.content.strip().lower():
             await message.channel.send("<:zzwhoops_cries:813585484441714698>")
     if (message.author.id == 390601966423900162):
-        if 'scribbles notes' in message.content:
+        if 'scribbles notes' in message.content.lower():
             await message.channel.send("https://tenor.com/bi7Db.gif")
     if (message.author.id == 501505695091392527):
         if 'sister' in message.content:
             await message.channel.send("<:sexualrelations:803707185963991081>")
-        if 'request' in message.content.replace(" ", "") and 'parsfuk' in message.content.replace(" ", ""):
+        if 'request' in message.content.lower().replace(" ", "") and 'parsfuk' in message.content.lower().replace(" ", ""):
             for x in range(7):
                 await message.channel.send("https://tenor.com/bMkPz.gif")
             embed = discord.Embed(title="No, Sam, #parsfuk **WILL NOT** be ***FUCKING LIBERATED***", description="__***DENIED***__")
             await message.channel.send(embed=embed)
-        if "fight" in message.content.replace(" ", "") and "continue" in message.content.replace(" ", ""):
+        if "fight" in message.content.lower().replace(" ", "") and "continue" in message.content.lower().replace(" ", ""):
             embed = discord.Embed(title="*Not after I'm done with you*...")
             await message.channel.send(embed=embed)
             await asyncio.sleep(2)
