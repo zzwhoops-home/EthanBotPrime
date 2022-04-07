@@ -45,18 +45,20 @@ async def on_ready():
         f'{guild.name} (id: {guild.id})\n'
     )
 
-async def create_account(ctx):
-    member = ctx.member    
+async def create_account(ctx, member=None):
+    if (member == None):
+        member = ctx.author
     tokens = 0.00
     coins = 0.00
     await ctx.channel.send(f"Records not found... creating account for {member.mention}.")
     data = {
-        "id": id,
+        "id": member.id,
         "name": f"{member.name}#{member.discriminator}",
         "tokens": tokens,
         "coins": coins
     }
-    await asyncio.sleep(2)
+    print(data)
+    await asyncio.sleep(1)
     await ctx.channel.send(f"Account created!")
     ethan_tokens.insert_one(data)
 
@@ -194,8 +196,7 @@ async def view_balance(ctx, member: discord.Member = None):
     tokens = 0.00
     coins = 0.00
     if existing == None:
-        await create_account(ctx
-        )
+        await create_account(ctx)
     else:
         tokens = f"{existing['tokens']:,.2f}"
         coins = f"{existing['coins']:,.2f}"
@@ -206,14 +207,55 @@ async def view_balance(ctx, member: discord.Member = None):
     await ctx.channel.send(embed=embed)
 
 @bot.command(name="pay", aliases=["donate", "give"])
-async def pay(ctx, member: discord.Member = None, amount = 0.0):
-    if (member == None):
+async def pay(ctx, currency, receiver: discord.Member = None, amount = 0.0):
+    giver = ctx.author
+    types = ["tokens", "coins"]
+
+    if (currency not in types):
+        await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
+        return
+    if (receiver == None):
         await ctx.channel.send("Who you payin', yourself? That ain't how it works.")
         return
     if (amount <= 0.0):
         await ctx.channel.send("Hey you gotta *pay* the person a positive number that isn't 0 bitch")
         return
-    
+
+    giver_existing = ethan_tokens.find_one({"id": giver.id})
+    receiver_existing = ethan_tokens.find_one({"id": receiver.id})
+    if (giver_existing == None):
+        await ctx.channel.send(f"You need an account and to like... not be broke to pay someone lmao. Try {prefix}bal to create one.")
+        return
+    if (receiver_existing == None):
+        await create_account(ctx, receiver)
+        receiver_existing = ethan_tokens.find_one({"id": receiver.id})
+
+    giver_balance = giver_existing[currency]
+    receiver_balance = receiver_existing[currency]
+    new_giver_balance = giver_balance - amount
+    new_receiver_balance = receiver_balance + amount
+
+    if (new_giver_balance < 0):
+        await ctx.channel.send(f"You can't give that much, ha poor")
+        return
+
+    give_data = {
+        "$set": {
+            currency: new_giver_balance
+        }
+    }
+    receive_data = {
+        "$set": {
+            currency: new_receiver_balance
+        }
+    }
+    ethan_tokens.update_one({"id": giver.id}, give_data)
+    ethan_tokens.update_one({"id": receiver.id}, receive_data)
+
+    symbol = await get_symbol(currency)
+    # maybe replace with another database call to make sure everything is consistent?
+    await ctx.channel.send(f"You gave **{amount:,.2f}**{symbol} to {receiver.mention}.\nYour balance: **{new_giver_balance:,.2f}**{symbol}\nTheir balance: **{new_receiver_balance:,.2f}{symbol}**")
+
 
 @bot.command(name="leaderboard", aliases=["top", "rich"])
 @commands.cooldown(1, 3, commands.BucketType.user)
@@ -622,7 +664,7 @@ async def on_message(message):
             await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
 
     await bot.process_commands(message)
-
+"""
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
@@ -631,7 +673,6 @@ async def on_command_error(ctx, error):
         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
     else:
         print(error)
-
-
+"""
 bot.loop.create_task(pping())
 bot.run(TOKEN)
