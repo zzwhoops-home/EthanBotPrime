@@ -22,6 +22,10 @@ GUILD = os.getenv('DISCORD_GUILD')
 USER = os.getenv('USER')
 PWD = os.getenv('PWD')
 
+# pping:
+PP_START = datetime.time(20, 00, 00)
+PP_END = datetime.time(22, 00, 00)
+
 guild = None
 intents = discord.Intents.all()
 intents.members = True
@@ -143,14 +147,13 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
 
     id = member.id
     existing = ethan_tokens.find_one({"id": id})
+    symbol = await get_symbol(currency)
     if existing == None:
         await create_account(ctx)
         if (currency == "tokens"):
             data["tokens"] = amount
-            symbol = "<:ethanger:763411726741143572>"
         if (currency == "coins"):
             data["coins"] = amount
-            symbol = "<:ethoggers:868201785301561394>"
         ethan_tokens.insert_one(data)        
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}")
     else:
@@ -179,7 +182,6 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-            symbol = await get_symbol(currency)
 
         if (amount < 0):
             await ctx.channel.send(f"Okay, I've taken **{amount:,.2f}** {symbol} from {member.mention}.\nThey now have **{new_balance:,.2f}** {symbol}.")
@@ -256,7 +258,7 @@ async def pay(ctx, currency, receiver: discord.Member = None, amount = 0.0):
     # maybe replace with another database call to make sure everything is consistent?
     await ctx.channel.send(f"You gave **{amount:,.2f}**{symbol} to {receiver.mention}.\nYour balance: **{new_giver_balance:,.2f}**{symbol}\nTheir balance: **{new_receiver_balance:,.2f}{symbol}**")
 
-
+    
 @bot.command(name="leaderboard", aliases=["top", "rich"])
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def leaderboard(ctx, currency = ""):
@@ -294,6 +296,18 @@ async def leaderboard(ctx, currency = ""):
     embed = discord.Embed(title=f"{ctx.guild.name}'s {currency.capitalize()} Leaderboard", description=description)
     await ctx.channel.send(embed=embed)   
 
+@bot.command(name="MURDERINFLATIONWITHARUSTYFUCKINGKNIFE")
+async def murder(ctx):
+    image="https://cms.qz.com/wp-content/uploads/2016/12/demon.jpg?quality=75&strip=all&w=1600&h=900&crop=1"
+    data = {
+        "$mul":
+        {
+            "tokens": 0.0000001
+        }
+    }
+    ethan_tokens.update_many(filter={"tokens":{"$not":{"$eq":0}}}, update=data)
+    await ctx.channel.send(image)
+
 @bot.command(name="HYPERINFLATION", aliases=["inflate"])
 @commands.cooldown(1, 30, commands.BucketType.guild)
 async def hyperinflation(ctx, currency = "", multi = 0.0):
@@ -314,7 +328,7 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
     elif (multi == 1.0):
         await ctx.channel.send("I mean, okay, sure, but you do realize this changes jackshit right")
         return
-    elif (multi > 1000.0):
+    elif (multi > 800813.5):
         await ctx.channel.send("Stop or I will stab EthanCurrency with a rusty knife before you do")
         return
 
@@ -330,7 +344,7 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
     await ctx.channel.send(f"Okay, I've inflated {symbol} by {multi}. I hope you know what you're doing...")
 
 @bot.command(name="luckynumbers", aliases=["lnums", "ln", "luckynums"])
-@commands.cooldown(1, 5, commands.BucketType.user)
+@commands.cooldown(1, 3, commands.BucketType.user)
 async def lucky_numbers(ctx, currency = "", amount = 0.0):
     types = ["tokens", "coins"]
     
@@ -346,7 +360,7 @@ async def lucky_numbers(ctx, currency = "", amount = 0.0):
         await ctx.channel.send(f"You don't have that much money idiot")
         return
     symbol = await get_symbol(currency)
-    await ctx.channel.send(f"Gambling **{amount:,.2f}**{symbol}. Choose a number from 1-10! Type 'e' to exit.")
+    await ctx.channel.send(f"Gambling **{amount:,.2f}**{symbol}. Choose a number from **1-10**! Type 'e' to exit.")
 
     def check(m):
         return (
@@ -430,17 +444,26 @@ async def roll(ctx, number=str(100)):
     await ctx.channel.send(f"Rolling **d{number}**...")
     await ctx.channel.send(f"You rolled **{roll:,}**.")
 
-async def activate_pp():
+@bot.command(name="manualtally")
+@commands.has_permissions(administrator=True)
+async def activate_pp(ctx=None):
     await bot.wait_until_ready()
+    
     guild = bot.get_guild(423583970328838154)
     channel = guild.get_channel(866168036770578432)
-    created = datetime.datetime.utcnow()
-    await channel.send(f"<@&652326925800570880> {prefix}pp")
-    await asyncio.sleep(7200)
+    
+    await channel.send(f"<@&axax652326925800570880> {prefix}pp")
+
+    now = datetime.datetime.utcnow()
+    after = datetime.datetime.combine(now.date(), PP_START)
+    before = datetime.datetime.combine(now.date(), PP_END)
+    total_seconds = (before - now).total_seconds()
+    print(f"Frogging: {total_seconds}sec remaining")
+    await asyncio.sleep(total_seconds)
     await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
 
     now_utc = datetime.datetime.utcnow()
-    messages = await channel.history(limit=None, before=now_utc, after=created).flatten()
+    messages = await channel.history(limit=None, before=before, after=after).flatten()
     pps = {}
     for msg in messages:
         if (msg.author.id != bot.user.id):
@@ -450,47 +473,52 @@ async def activate_pp():
             continue
         for embed in embeds:
             footer = str(embed.footer.text)
+            if (embed.title != "peepee size machine"):
+                continue
             if (footer not in pps) or len(pps) == 0:
                 cur = embed.description.split("\n")
                 pps[footer] = str(cur[1]).count("=")
     pps = dict(sorted(pps.items(), key=lambda item: item[1], reverse=True))
+    print(pps)
     description = ""
-    count = 0
-    units = random.choice(["cm", "mm", "m", "in", "ft", "yd"])
-    for key, value in pps.items():
-        count += 1
-        text = f"**({count}).** "
-        if (count <= 2):
-            text += "<:poggies:826811320073453598> **FROLIGARCH** "
-        member = guild.get_member(int(key))
-        text += f"**{member.name}**: {value} {units}\n"
-        description += text
-            
     if len(pps.items()) == 0:
         description = f"xd yall suck, not even a single pp. Fuckin disgracing the Glorious Froligarchy."
+    else:
+        count = 0
+        units = random.choice(["cm", "mm", "m", "in", "ft", "yd"])
+        for key, value in pps.items():
+            count += 1
+            text = f"**({count}).** "
+            if (count <= 2):
+                text += "<:poggies:826811320073453598> **FROLIGARCH** "
+            member = guild.get_member(int(key))
+            text += f"**{member.name}**: {value} {units}\n"
+            description += text
 
     embed = discord.Embed(title="LEADERBOARD FOR TODAY", url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
     await channel.send(embed=embed)
     await remove_froligarchs(guild)
     await add_froligarchs(guild, list(pps.items())[:2])
 
-WHEN = datetime.time(20, 00, 00)
 async def pping():
+
     now = datetime.datetime.utcnow()
-    target = datetime.datetime.combine(now.date(), WHEN)
+    target = datetime.datetime.combine(now.date(), PP_START)
     seconds_until_target = math.ceil((target - now).total_seconds())
     print(f"Seconds until target 1: {seconds_until_target}")
 
     if (seconds_until_target < 0):
-        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), WHEN)
+        if (seconds_until_target >= -7200):
+            await activate_pp()
+        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
         seconds_until_target = math.ceil((target - now).total_seconds())
         print(f"Seconds until target 2: {seconds_until_target}")
-
+    # maybe replace 7200 with the difference b/w PP_START and PP_END
     await asyncio.sleep(seconds_until_target)
     await activate_pp()
     while True:
         print(f"Seconds until target 3: {seconds_until_target}")
-        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), WHEN)
+        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
         seconds_until_target = math.ceil((target - now).total_seconds())
         await activate_pp()
         await asyncio.sleep(seconds_until_target)
@@ -674,5 +702,6 @@ async def on_command_error(ctx, error):
     else:
         print(error)
 """
+
 bot.loop.create_task(pping())
 bot.run(TOKEN)
