@@ -258,6 +258,29 @@ async def pay(ctx, currency, receiver: discord.Member = None, amount = 0.0):
     # maybe replace with another database call to make sure everything is consistent?
     await ctx.channel.send(f"You gave **{amount:,.2f}**{symbol} to {receiver.mention}.\nYour balance: **{new_giver_balance:,.2f}**{symbol}\nTheir balance: **{new_receiver_balance:,.2f}{symbol}**")
 
+@bot.command(name="circulation", aliases=['circ', 'total', 'all'])
+async def total_wealth(ctx):
+    agg = ethan_tokens.aggregate([{
+        "$group": {
+            "_id": 1,
+            "tokens": {"$sum": "$tokens"},
+            "coins": {"$sum": "$coins"},
+            "count": {"$sum": 1}
+        }
+    }])
+
+    total_value = list(agg)[0]
+    db_count = total_value['count']
+    tokens = total_value['tokens']
+    coins = total_value['coins']
+    avg_tokens = tokens / db_count
+    avg_coins = coins / db_count
+
+    token_symbol = await get_symbol('tokens')
+    coin_symbol = await get_symbol('coins')
+    description = f"**Members in database: __{db_count}__**\n\n**Tokens:** `{tokens:,.2f}`{token_symbol}\n**Average:** `{avg_tokens:,.2f}`{token_symbol}\n\n**Coins:** `{coins:,.2f}`{coin_symbol}\n**Average:** `{avg_coins:,.2f}`{coin_symbol}"
+    embed = discord.Embed(title=f"__{ctx.guild.name}'s Server Worth__", description=description)
+    await ctx.channel.send(embed=embed)
     
 @bot.command(name="leaderboard", aliases=["top", "rich"])
 @commands.cooldown(1, 3, commands.BucketType.user)
@@ -452,7 +475,7 @@ async def activate_pp(ctx=None):
     guild = bot.get_guild(423583970328838154)
     channel = guild.get_channel(866168036770578432)
     
-    await channel.send(f"<@&axax652326925800570880> {prefix}pp")
+    await channel.send(f"<@&652326925800570880> {prefix}pp")
 
     now = datetime.datetime.utcnow()
     after = datetime.datetime.combine(now.date(), PP_START)
