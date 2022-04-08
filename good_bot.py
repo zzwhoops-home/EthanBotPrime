@@ -530,6 +530,8 @@ async def activate_pp(ctx=None):
     before = datetime.datetime.combine(now.date(), PP_END)
     total_seconds = (before - now).total_seconds()
     print(f"Frogging: {total_seconds}sec remaining")
+    if (total_seconds < 0):
+        return
     await asyncio.sleep(total_seconds)
     await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
 
