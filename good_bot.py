@@ -76,6 +76,7 @@ async def get_symbol(currency):
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def set_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
+    symbol = await get_symbol(currency)
     limit = 1000000
     types = ["tokens", "coins"]
 
@@ -92,12 +93,11 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
     id = member.id
     existing = ethan_tokens.find_one({"id": id})
     if existing == None:
-        await create_account(ctx)
+        await create_account(ctx, member)
         if (currency == "tokens"):
             data["tokens"] = amount
         if (currency == "coins"):
             data["coins"] = amount
-        symbol = await get_symbol(currency)
         ethan_tokens.insert_one(data)        
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
     else:
@@ -124,7 +124,6 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
                 }
             }
             ethan_tokens.update_one(query, data)
-            symbol = await get_symbol(currency)
 
         await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
 
@@ -132,6 +131,7 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def edit_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
+    symbol = await get_symbol(currency)
     limit = 10000
     types = ["tokens", "coins"]
 
@@ -147,9 +147,8 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
 
     id = member.id
     existing = ethan_tokens.find_one({"id": id})
-    symbol = await get_symbol(currency)
     if existing == None:
-        await create_account(ctx)
+        await create_account(ctx, member)
         if (currency == "tokens"):
             data["tokens"] = amount
         if (currency == "coins"):
@@ -209,9 +208,10 @@ async def view_balance(ctx, member: discord.Member = None):
     await ctx.channel.send(embed=embed)
 
 @bot.command(name="pay", aliases=["donate", "give"])
-async def pay(ctx, currency, receiver: discord.Member = None, amount = 0.0):
+async def pay(ctx, currency, receiver: discord.Member = None, amount = ""):
     giver = ctx.author
     types = ["tokens", "coins"]
+    symbol = await get_symbol(currency)
 
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
@@ -219,12 +219,28 @@ async def pay(ctx, currency, receiver: discord.Member = None, amount = 0.0):
     if (receiver == None):
         await ctx.channel.send("Who you payin', yourself? That ain't how it works.")
         return
-    if (amount <= 0.0):
-        await ctx.channel.send("Hey you gotta *pay* the person a positive number that isn't 0 bitch")
-        return
 
     giver_existing = ethan_tokens.find_one({"id": giver.id})
+    giver_balance = giver_existing[currency]
+    try:
+        amount = float(amount)
+    except ValueError:
+        if (amount == "all"):
+            amount = giver_balance
+        else:
+            await ctx.channel.send(f"How the fuck am I supposed to give {receiver.display_name} {amount}{symbol}?")
+            return
+    if (float(amount) <= 0.0):
+        await ctx.channel.send("Hey you gotta *pay* the person a positive number that isn't 0 bitch")
+        return
+        
     receiver_existing = ethan_tokens.find_one({"id": receiver.id})
+    if (amount == "all"):
+        amount = giver_balance
+    receiver_balance = receiver_existing[currency]
+    new_giver_balance = giver_balance - amount
+    new_receiver_balance = receiver_balance + amount
+
     if (giver_existing == None):
         await ctx.channel.send(f"You need an account and to like... not be broke to pay someone lmao. Try {prefix}bal to create one.")
         return
@@ -232,10 +248,6 @@ async def pay(ctx, currency, receiver: discord.Member = None, amount = 0.0):
         await create_account(ctx, receiver)
         receiver_existing = ethan_tokens.find_one({"id": receiver.id})
 
-    giver_balance = giver_existing[currency]
-    receiver_balance = receiver_existing[currency]
-    new_giver_balance = giver_balance - amount
-    new_receiver_balance = receiver_balance + amount
 
     if (new_giver_balance < 0):
         await ctx.channel.send(f"You can't give that much, ha poor")
@@ -254,7 +266,6 @@ async def pay(ctx, currency, receiver: discord.Member = None, amount = 0.0):
     ethan_tokens.update_one({"id": giver.id}, give_data)
     ethan_tokens.update_one({"id": receiver.id}, receive_data)
 
-    symbol = await get_symbol(currency)
     # maybe replace with another database call to make sure everything is consistent?
     await ctx.channel.send(f"You gave **{amount:,.2f}**{symbol} to {receiver.mention}.\nYour balance: **{new_giver_balance:,.2f}**{symbol}\nTheir balance: **{new_receiver_balance:,.2f}{symbol}**")
 
@@ -335,6 +346,7 @@ async def murder(ctx):
 @commands.cooldown(1, 30, commands.BucketType.guild)
 async def hyperinflation(ctx, currency = "", multi = 0.0):
     types = ["tokens", "coins"]
+    symbol = await get_symbol(currency)
 
     if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Only Ethan can cause hyperinflation!")
@@ -363,26 +375,33 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
     }
     ethan_tokens.update_many(filter={currency:{"$not":{"$eq":0}}}, update=data)
 
-    symbol = await get_symbol(currency)
     await ctx.channel.send(f"Okay, I've inflated {symbol} by {multi}. I hope you know what you're doing...")
 
 @bot.command(name="luckynumbers", aliases=["lnums", "ln", "luckynums"])
 @commands.cooldown(1, 3, commands.BucketType.user)
-async def lucky_numbers(ctx, currency = "", amount = 0.0):
+async def lucky_numbers(ctx, currency = "", amount = ""):
     types = ["tokens", "coins"]
+    symbol = await get_symbol(currency)
     
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
         return
+    balance = ethan_tokens.find_one({"id": ctx.author.id})[currency]
+    try:
+        amount = float(amount)
+    except ValueError:
+        if (amount == "all"):
+            amount = balance
+        else:
+            await ctx.channel.send(f"The fuck is {amount}{symbol}?")
+            return
     if (amount <= 0.0):
         await ctx.channel.send(f"You have to gamble some amount of tokens or coins.\nBroke ass lil shit lmao")
         return
     
-    balance = ethan_tokens.find_one({"id": ctx.author.id})[currency]
     if (balance < amount):
         await ctx.channel.send(f"You don't have that much money idiot")
         return
-    symbol = await get_symbol(currency)
     await ctx.channel.send(f"Gambling **{amount:,.2f}**{symbol}. Choose a number from **1-10**! Type 'e' to exit.")
 
     def check(m):
@@ -715,7 +734,7 @@ async def on_message(message):
             await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
 
     await bot.process_commands(message)
-"""
+
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
@@ -724,7 +743,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
     else:
         print(error)
-"""
+
 
 bot.loop.create_task(pping())
 bot.run(TOKEN)
