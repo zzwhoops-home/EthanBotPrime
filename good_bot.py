@@ -22,6 +22,8 @@ GUILD = os.getenv('DISCORD_GUILD')
 USER = os.getenv('USER')
 PWD = os.getenv('PWD')
 
+STOCKS_API_KEY = os.getenv("YAHOO_API_KEY")
+
 # pping:
 PP_START = datetime.time(20, 00, 00)
 PP_END = datetime.time(22, 00, 00)
@@ -472,6 +474,33 @@ async def lucky_numbers(ctx, currency = "", amount = ""):
         await ctx.channel.send(f"You now have **{new_balance:,.2f}**{symbol}")
     except asyncio.TimeoutError:
         await ctx.channel.send("Type at most **TWO NUMBERS** in *30* seconds **ITS NOT THAT HARD**.\nI should just take your money but... that would be a scam. EthanBot does not scam.")    
+
+@bot.command(name="stocks", aliases=["stock", "stonk", "stonks"])
+@commands.cooldown(1, 6969, commands.BucketType.user)
+async def stocks(ctx):
+    async def hourly():
+        pass
+    url = "https://yfapi.net/v6/finance/quote"
+    querystring = {"symbols":"CL=F,GC=F,ZW=F,ZC=F,CU=F"}
+    headers = {
+        'x-api-key': STOCKS_API_KEY
+        }
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    data = response.json()['quoteResponse']['result']
+
+    description = ""
+    for good in data:
+        name = good['shortName']
+        currency = good['currency']
+        price = good['regularMarketPrice']
+        if (currency == "USX"):
+            price /= 100
+        description += f"{name}: ${price}/unit\n"
+
+    embed = discord.Embed(title="Stonks", description=description)
+    await ctx.channel.send(embed=embed)
+
 
 @bot.command(name="roll", aliases=['dice', 'r'])
 async def roll(ctx, number=str(100)):
