@@ -85,15 +85,15 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
 
     if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Only Ethan can use this dumbass")
-        await set_balance.reset_cooldown(ctx)
+        set_balance.reset_cooldown(ctx)
         return
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
-        await set_balance.reset_cooldown(ctx)
+        set_balance.reset_cooldown(ctx)
         return
     if (abs(amount) > limit):
         await ctx.channel.send(f"Hey, you tryna devalue Ethan currencies?\nEnter a number between {-limit:,} and {limit:,}.")
-        await set_balance.reset_cooldown(ctx)
+        set_balance.reset_cooldown(ctx)
         return
 
     id = member.id
@@ -143,15 +143,15 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
 
     if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Only Ethan can use this dumbass")
-        await edit_balance.reset_cooldown(ctx)
+        edit_balance.reset_cooldown(ctx)
         return
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
-        await edit_balance.reset_cooldown(ctx)
+        edit_balance.reset_cooldown(ctx)
         return
     if (abs(amount) > limit):
         await ctx.channel.send(f"Hey, you tryna cause hyperinflation or something dumbass?\nEnter a number between {-limit:,} and {limit:,}.")
-        await edit_balance.reset_cooldown(ctx)
+        edit_balance.reset_cooldown(ctx)
         return
 
     id = member.id
@@ -203,21 +203,21 @@ async def edit_all_balances(ctx, currency, amount):
     types = ["tokens", "coins"]
     symbol = await get_symbol(currency)
 
-    if (ctx.author.id != 292448459909365760):
+    if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Stop trying to be Ethan")
-        await edit_all_balances.reset_cooldown(ctx)
+        edit_all_balances.reset_cooldown(ctx)
         return
     if (currency == ""):
         await ctx.channel.send("Well pick a currency to add to.")
-        await edit_all_balances.reset_cooldown(ctx)
+        edit_all_balances.reset_cooldown(ctx)
         return
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try!")
-        await edit_all_balances.reset_cooldown(ctx)
+        edit_all_balances.reset_cooldown(ctx)
         return
     if (amount == 0.0):
         await ctx.channel.send("You're a dumb dumb, dumb dumb")
-        await edit_all_balances.reset_cooldown(ctx)
+        edit_all_balances.reset_cooldown(ctx)
         return
         
     # increment all currency values by amount
@@ -345,7 +345,7 @@ async def leaderboard(ctx, currency = ""):
     types = ["tokens", "coins"]
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
-        await leaderboard.reset_cooldown(ctx)
+        leaderboard.reset_cooldown(ctx)
         return
     
     description = ""
@@ -394,29 +394,29 @@ async def hyperinflation(ctx, currency = "", multi = 0.0):
     types = ["tokens", "coins"]
     symbol = await get_symbol(currency)
 
-    if (ctx.author.id != 292448459909365760):
+    if (ctx.author.id != 390601966423900162):
         await ctx.channel.send("Only Ethan can cause hyperinflation!")
-        await hyperinflation.reset_cooldown(ctx)
+        hyperinflation.reset_cooldown(ctx)
         return
     if (currency == ""):
         await ctx.channel.send("Well pick a currency to inflate, idiot")
-        await hyperinflation.reset_cooldown(ctx)
+        hyperinflation.reset_cooldown(ctx)
         return
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try!")
-        await hyperinflation.reset_cooldown(ctx)
+        hyperinflation.reset_cooldown(ctx)
         return
     if (multi <= 0.0):
         await ctx.channel.send("Canceling EthanCurrency, are you? Enter a number above 0 dumbass")
-        await hyperinflation.reset_cooldown(ctx)
+        hyperinflation.reset_cooldown(ctx)
         return
     elif (multi == 1.0):
         await ctx.channel.send("I mean, okay, sure, but you do realize this changes jackshit right")
-        await hyperinflation.reset_cooldown(ctx)
+        hyperinflation.reset_cooldown(ctx)
         return
     elif (multi > 800813.5):
         await ctx.channel.send("Stop or I will stab EthanCurrency with a rusty knife before you do")
-        await hyperinflation.reset_cooldown(ctx)
+        hyperinflation.reset_cooldown(ctx)
         return
 
     data = {
@@ -464,7 +464,7 @@ async def lucky_numbers(ctx, currency = "", amount = ""):
     
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
-        await lucky_numbers.reset_cooldown(ctx)
+        lucky_numbers.reset_cooldown(ctx)
         return
     balance = ethan_tokens.find_one({"id": ctx.author.id})[currency]
     try:
@@ -707,11 +707,11 @@ async def stiff_cocks(ctx, num=100):
     limit = 500
     if (num <= 0):
         await ctx.channel.send(f"Enter a number between 1 and {limit}, dumbass. Victory doesn't come *that* easy.")
-        await stiff_cocks.reset_cooldown(ctx)
+        stiff_cocks.reset_cooldown(ctx)
         return
     elif (num >= limit):
         await ctx.channel.send(f"I will leak my nudes if you somehow get over {limit}. Pick another number, shitstick!")
-        await stiff_cocks.reset_cooldown(ctx)
+        stiff_cocks.reset_cooldown(ctx)
         return
 
     stiff_cocks.stop = False
@@ -777,7 +777,7 @@ async def stiff_cocks(ctx, num=100):
 async def eliminate(ctx, member: discord.Member):
     if (member.guild_permissions.administrator):
         await ctx.channel.send("https://i.pinimg.com/originals/0f/fd/29/0ffd29da68cc8176440779fcdb5b87bb.jpg")
-        await eliminate.reset_cooldown(ctx)
+        eliminate.reset_cooldown(ctx)
         return
     nick = member.display_name
     await ctx.channel.send(f'{member.mention} is a lil shit')
@@ -849,6 +849,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
+"""
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
@@ -857,6 +858,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
     else:
         print(error)
+"""
 
 bot.loop.create_task(pping())
 bot.run(TOKEN)
