@@ -80,7 +80,6 @@ async def get_symbol(currency):
 async def set_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
     symbol = await get_symbol(currency)
-    limit = 1000000
     types = ["tokens", "coins"]
 
     if (ctx.author.id != 390601966423900162):
@@ -89,10 +88,6 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
         return
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
-        set_balance.reset_cooldown(ctx)
-        return
-    if (abs(amount) > limit):
-        await ctx.channel.send(f"Hey, you tryna devalue Ethan currencies?\nEnter a number between {-limit:,} and {limit:,}.")
         set_balance.reset_cooldown(ctx)
         return
 
@@ -138,7 +133,6 @@ async def set_balance(ctx, currency, member: discord.Member, amount):
 async def edit_balance(ctx, currency, member: discord.Member, amount):
     amount = round(float(str(amount).replace(",","")), 2)
     symbol = await get_symbol(currency)
-    limit = 10000
     types = ["tokens", "coins"]
 
     if (ctx.author.id != 390601966423900162):
@@ -147,10 +141,6 @@ async def edit_balance(ctx, currency, member: discord.Member, amount):
         return
     if (currency not in types):
         await ctx.channel.send(f"Ethan{currency.capitalize()}:tm: doesn't exist. Nice try! Type 'coins' or 'tokens'.")
-        edit_balance.reset_cooldown(ctx)
-        return
-    if (abs(amount) > limit):
-        await ctx.channel.send(f"Hey, you tryna cause hyperinflation or something dumbass?\nEnter a number between {-limit:,} and {limit:,}.")
         edit_balance.reset_cooldown(ctx)
         return
 
@@ -849,7 +839,6 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-"""
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
@@ -858,7 +847,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
     else:
         print(error)
-"""
+
 
 bot.loop.create_task(pping())
 bot.run(TOKEN)
