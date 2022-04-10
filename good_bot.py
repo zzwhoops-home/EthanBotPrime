@@ -28,6 +28,10 @@ STOCKS_API_KEY = os.getenv("YAHOO_API_KEY")
 PP_START = datetime.time(20, 00, 00)
 PP_END = datetime.time(22, 00, 00)
 
+# currency symbols:
+token_symbol = "<:ethanger:763411726741143572>"
+coin_symbol = "<:ethoggers:868201785301561394>"
+
 guild = None
 intents = discord.Intents.all()
 intents.members = True
@@ -322,8 +326,6 @@ async def total_wealth(ctx):
     avg_tokens = tokens / db_count
     avg_coins = coins / db_count
 
-    token_symbol = await get_symbol('tokens')
-    coin_symbol = await get_symbol('coins')
     description = f"**Members in database: __{db_count}__**\n\n**Tokens:** `{tokens:,.2f}`{token_symbol}\n**Average:** `{avg_tokens:,.2f}`{token_symbol}\n\n**Coins:** `{coins:,.2f}`{coin_symbol}\n**Average:** `{avg_coins:,.2f}`{coin_symbol}"
     embed = discord.Embed(title=f"__{ctx.guild.name}'s Server Worth__", description=description)
     await ctx.channel.send(embed=embed)
@@ -692,26 +694,118 @@ async def egadpp(ctx):
     embed.set_footer(text=f"{ctx.message.author.id}")
     await ctx.send(embed=embed)
 
+# CHANGE COOLDOWN BACK TO 45
 @bot.command(name="ETHANEDGEPLAY", aliases=["EEP", "EDGEPLAY"])
-@commands.cooldown(1, 45, commands.BucketType.guild)
-async def eth_edge(ctx, num=100):
+@commands.cooldown(1, 2, commands.BucketType.guild)
+async def eth_edge(ctx, success="100"):
+    try:
+        success = int(success)
+    except ValueError:
+        await ctx.channel.send("Bro you gotta give me an integer")
+        return
     # CHANGE THIS BACK TO 30
-    time = 3
+    time = 5
     rates = general_info.find_one({"type": "currency"})
-    coins_rate = rates["coins_rate"]
     tokens_rate = rates["tokens_rate"]
+    coins_rate = rates["coins_rate"]
 
     limit = 1000
-    if (num <= 0):
+    if (success <= 0):
         await ctx.channel.send(f"Enter a number between 1 and {limit}, dumbass. Victory doesn't come *that* easy.")
         eth_edge.reset_cooldown(ctx)
         return
-    elif (num >= limit):
+    elif (success >= limit):
         await ctx.channel.send(f"I will leak my nudes if you somehow get over {limit}. Pick another number shitstick!")
         eth_edge.reset_cooldown(ctx)
         return
 
-    delay = 5
+    async def calculate_tokens(users, messages, target, inflation):
+        user_score = math.pow(users * 12, 1.1)
+        message_score = math.pow(messages, 1.2) / 2
+        bonus = random.randint(0, messages)
+        multiplier = math.pow(target / 50, 0.4)
+        total = (user_score + message_score + bonus) * multiplier
+        inflation_total = total * inflation
+        data = {
+            "user_score": user_score,
+            "message_score": message_score,
+            "multiplier": multiplier,
+            "bonus": bonus,
+            "total": total,
+            "inflation_total": inflation_total
+        }
+        return data
+
+    async def calculate_coins(users, messages, target, inflation):
+        msg_rate_user = (messages / users) / time
+
+        rate_score = math.pow(msg_rate_user * 75, 0.9)
+        multiplier = math.pow(target / 50, 0.4)
+        total = rate_score * multiplier
+        inflation_total = total * inflation
+        data = {
+            "msg_rate_user": msg_rate_user,
+            "rate_score": rate_score,
+            "multiplier": multiplier,
+            "total": total,
+            "inflation_total": inflation_total
+        }
+        return data
+
+    async def counter(ctx):
+        count = 0
+        users = 0
+        per_user_stats = {}
+
+        now = datetime.datetime.utcnow()
+        done = now + datetime.timedelta(seconds=time + 0.5)
+        await asyncio.sleep(time)
+
+        await ctx.channel.send("Tallying love for edge play...")
+        await asyncio.sleep(2)
+
+        messages = await ctx.channel.history(limit=None, before=done, after=now).flatten()
+
+        for msg in messages:
+            if (msg.content != "ELEP"):
+                continue
+            name = msg.author.name
+            count += 1
+            if (name not in per_user_stats):
+                per_user_stats[name] = 1
+            elif (name in per_user_stats):
+                per_user_stats[name] = per_user_stats.get(name) + 1
+
+        print(per_user_stats)
+
+        users = len(per_user_stats)
+        if (int(count) >= int(success)):
+            tokens = await calculate_tokens(users, count, success, tokens_rate)
+            coins = await calculate_coins(users, count, success, coins_rate)
+        else:
+            tokens = 0
+            coins = 0
+
+        user_earnings = ""
+        for key, value in per_user_stats.items():
+            user_earnings += f"**{key}**: **{value}** msgs\n"
+
+        description = f"Token Payout: **{tokens['inflation_total']}**{token_symbol}\nCoin Payout: **{coins['inflation_total']}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings**__\n{user_earnings}"
+        embed = discord.Embed(title="__**Results:**__", description=description)
+        await ctx.channel.send(embed=embed)
+        await asyncio.sleep(2)
+
+        if (int(count) >= int(success)):
+            await ctx.channel.send("https://ih1.redbubble.net/image.724682828.9041/flat,1000x1000,075,f.jpg")
+        else:
+            await ctx.channel.send("you tried lmao you suck\n**YOU SUCK SKILL ISSUE LMAO**")
+            await ctx.channel.send("https://imgur.com/a/vlkjkxv")
+
+    embed=discord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ELEP' FOR 30 SECONDS", description=f"Goal: {success}\n")
+    await ctx.channel.send(embed=embed)
+    
+    # CHANGE BACK TO 5
+    delay = 2
     for x in range(delay):
         await asyncio.sleep(1)
         await ctx.channel.send(str(delay - x))
@@ -722,39 +816,6 @@ async def eth_edge(ctx, num=100):
     tally = asyncio.create_task(counter(ctx))
     await tally
 
-    async def counter(ctx):
-        count = 0
-        users = []
-
-        now = datetime.datetime.utcnow()
-        done = datetime.datetime.combine(now, now.time() + datetime.timedelta(seconds=time))
-        await asyncio.sleep(time)
-
-        messages = ctx.channel.history(limit=None, before=done, after=now).flatten()
-
-        for msg in messages:
-            if (msg.content != "ETHAN LOVES EDGE PLAY"):
-                continue
-            if (msg.author not in users):
-                users.append(msg.author)
-            
-                
-        await ctx.channel.send("Tallying love for edge play...")
-        await asyncio.sleep(3)
-        success = num
-        await ctx.channel.send(f"Messages: {count}/{success}\nUsers Participated: {len(users)}")
-        await asyncio.sleep(2)
-
-        if (int(count) >= int(success)):
-            embed=discord.Embed(description="LMAO YOUR DID IT BUT YOU GET ABSOLUTELY NOTHING DONUT!!!\nEthanBot IS PLEASED TO WASTE YOUR TIME")
-            await ctx.channel.send(embed=embed)
-            await ctx.channel.send("https://ih1.redbubble.net/image.724682828.9041/flat,1000x1000,075,f.jpg")
-        else:
-            await ctx.channel.send("you tried lmao you suck\n**YOU SUCK SKILL ISSUE LMAO**")
-            await ctx.channel.send("https://imgur.com/a/vlkjkxv")
-
-    embed=discord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ETHAN LOVES EDGE PLAY' FOR 30 SECONDS", description=f"Goal: {num}\n")
-    await ctx.channel.send(embed=embed)
 
 @bot.command(name="ELIMINATE", aliases=["eliminate", "elim", "ELIM"])
 @commands.cooldown(1, 30, commands.BucketType.user)
@@ -766,7 +827,7 @@ async def eliminate(ctx, member: discord.Member):
     nick = member.display_name
     await ctx.channel.send(f'{member.mention} is a lil shit')
     await asyncio.sleep(1)
-    await ctx.channel.send('lmao fuck u get eliminated')
+    await ctx.channel.send('lmao L get eliminated')
     await member.edit(nick="Eliminated")
     await asyncio.sleep(9)
     await ctx.channel.send('oh wait nvm, zzwhoops told me odro days are over.')
