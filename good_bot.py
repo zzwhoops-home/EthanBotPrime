@@ -585,7 +585,7 @@ async def roll(ctx, number=str(100)):
 
 @bot.command(name="manualtally")
 @commands.has_permissions(administrator=True)
-async def activate_pp(ctx=None):
+async def activate_pp(ctx=None, announce=False):
     await bot.wait_until_ready()
     
     guild = bot.get_guild(423583970328838154)
@@ -598,11 +598,12 @@ async def activate_pp(ctx=None):
     total_seconds = (before - now).total_seconds()
 
     print(f"Frogging: {total_seconds}sec remaining")
+    if (announce == True):
+        await channel.send(f"<@&652326925800570880> {prefix}pp")
     if (total_seconds > 0 and total_seconds <= duration):
-       await channel.send(f"<@&652326925800570880> {prefix}pp")
+        await asyncio.sleep(total_seconds)
     elif (total_seconds > duration):
         return
-    await asyncio.sleep(total_seconds)
     await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
 
     now_utc = datetime.datetime.utcnow()
@@ -658,12 +659,12 @@ async def pping():
         print(f"Seconds until target 2: {seconds_until_target}")
     # maybe replace 7200 with the difference b/w PP_START and PP_END
     await asyncio.sleep(seconds_until_target)
-    await activate_pp()
+    await activate_pp(True)
     while True:
         print(f"Seconds until target 3: {seconds_until_target}")
         target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
         seconds_until_target = math.ceil((target - now).total_seconds())
-        await activate_pp()
+        await activate_pp(True)
         await asyncio.sleep(seconds_until_target)
 
 async def add_froligarchs(guild, members):
@@ -691,41 +692,54 @@ async def egadpp(ctx):
     embed.set_footer(text=f"{ctx.message.author.id}")
     await ctx.send(embed=embed)
 
-@bot.command(name="STIFFCOCKS", aliases=["SC", "SCOCKS"])
+@bot.command(name="ETHANEDGEPLAY", aliases=["EEP", "EDGEPLAY"])
 @commands.cooldown(1, 45, commands.BucketType.guild)
-async def stiff_cocks(ctx, num=100):
-    limit = 500
+async def eth_edge(ctx, num=100):
+    # CHANGE THIS BACK TO 30
+    time = 3
+    rates = general_info.find_one({"type": "currency"})
+    coins_rate = rates["coins_rate"]
+    tokens_rate = rates["tokens_rate"]
+
+    limit = 1000
     if (num <= 0):
         await ctx.channel.send(f"Enter a number between 1 and {limit}, dumbass. Victory doesn't come *that* easy.")
-        stiff_cocks.reset_cooldown(ctx)
+        eth_edge.reset_cooldown(ctx)
         return
     elif (num >= limit):
-        await ctx.channel.send(f"I will leak my nudes if you somehow get over {limit}. Pick another number, shitstick!")
-        stiff_cocks.reset_cooldown(ctx)
+        await ctx.channel.send(f"I will leak my nudes if you somehow get over {limit}. Pick another number shitstick!")
+        eth_edge.reset_cooldown(ctx)
         return
 
-    stiff_cocks.stop = False
+    delay = 5
+    for x in range(delay):
+        await asyncio.sleep(1)
+        await ctx.channel.send(str(delay - x))
 
-    async def timer(ctx):
-        await asyncio.sleep(30)
-        stiff_cocks.stop = True
+    await asyncio.sleep(1)
+    await ctx.channel.send("**-=-=- GO -=-=-**")
+
+    tally = asyncio.create_task(counter(ctx))
+    await tally
 
     async def counter(ctx):
         count = 0
         users = []
-        while True:
-            if (stiff_cocks.stop == True):
-                break
-            try:
-                msg = await bot.wait_for("message", check=check, timeout=5.0)
-                if (msg.author.name not in users):
-                    users.append(msg.author.name)
-                count += 1
-                print(count)
-            except asyncio.TimeoutError:
-                print("timeout")
+
+        now = datetime.datetime.utcnow()
+        done = datetime.datetime.combine(now, now.time() + datetime.timedelta(seconds=time))
+        await asyncio.sleep(time)
+
+        messages = ctx.channel.history(limit=None, before=done, after=now).flatten()
+
+        for msg in messages:
+            if (msg.content != "ETHAN LOVES EDGE PLAY"):
+                continue
+            if (msg.author not in users):
+                users.append(msg.author)
+            
                 
-        await ctx.channel.send("Tallying stiff cocks...")
+        await ctx.channel.send("Tallying love for edge play...")
         await asyncio.sleep(3)
         success = num
         await ctx.channel.send(f"Messages: {count}/{success}\nUsers Participated: {len(users)}")
@@ -739,28 +753,8 @@ async def stiff_cocks(ctx, num=100):
             await ctx.channel.send("you tried lmao you suck\n**YOU SUCK SKILL ISSUE LMAO**")
             await ctx.channel.send("https://imgur.com/a/vlkjkxv")
 
-    def check(m):
-        return (
-            m.content.strip() == "STIFF COCKS"
-            and m.channel.id == ctx.channel.id
-        )
-
-    embed=discord.Embed(title="I LOVE STIFF COCKS. PREPARE TO SEND 'STIFF COCKS' FOR 30 SECONDS", description=f"Goal: {num}")
+    embed=discord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ETHAN LOVES EDGE PLAY' FOR 30 SECONDS", description=f"Goal: {num}\n")
     await ctx.channel.send(embed=embed)
-
-    delay = 5
-    for x in range(delay):
-        await asyncio.sleep(1)
-        await ctx.channel.send(str(delay - x))
-
-    await asyncio.sleep(1)
-    await ctx.channel.send("**-=-=- GO -=-=-**")
-
-    tally = asyncio.create_task(counter(ctx))
-    wait = asyncio.create_task(timer(ctx))
-
-    await tally
-    await wait
 
 @bot.command(name="ELIMINATE", aliases=["eliminate", "elim", "ELIM"])
 @commands.cooldown(1, 30, commands.BucketType.user)
@@ -813,6 +807,10 @@ async def on_message(message):
             await message.channel.send("荣耀归于中国")
         if 'egg' in msg:
             await message.channel.send("egg")
+        if 'penis' in msg:
+            await message.channel.send("lol penis")
+        if 'sex' in msg:
+            await message.channel.send("sex ( ͡° ͜ʖ ͡°)")
     if (message.author.id == 292448459909365760):
         if 'sad' in message.content.strip().lower():
             await message.channel.send("<:zzwhoops_cries:813585484441714698>")
@@ -838,7 +836,7 @@ async def on_message(message):
             await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
 
     await bot.process_commands(message)
-
+"""
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
@@ -847,7 +845,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
     else:
         print(error)
-
+"""
 
 bot.loop.create_task(pping())
 bot.run(TOKEN)
