@@ -37,7 +37,7 @@ intents = discord.Intents.all()
 intents.members = True
 
 prefix = "eb!"
-bot = commands.Bot(command_prefix=prefix, intents=intents)
+bot = commands.Bot(case_insensitive=True, command_prefix=prefix, intents=intents)
 perms = discord.Permissions()
 
 client = MongoClient(f"mongodb+srv://{USER}:{PWD}@ethanbotdb.jiyrt.mongodb.net/EthanBotDB")
@@ -661,12 +661,12 @@ async def pping():
         print(f"Seconds until target 2: {seconds_until_target}")
     # maybe replace 7200 with the difference b/w PP_START and PP_END
     await asyncio.sleep(seconds_until_target)
-    await activate_pp(True)
+    await activate_pp(announce=True)
     while True:
         print(f"Seconds until target 3: {seconds_until_target}")
         target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
         seconds_until_target = math.ceil((target - now).total_seconds())
-        await activate_pp(True)
+        await activate_pp(announce=True)
         await asyncio.sleep(seconds_until_target)
 
 async def add_froligarchs(guild, members):
@@ -694,17 +694,15 @@ async def egadpp(ctx):
     embed.set_footer(text=f"{ctx.message.author.id}")
     await ctx.send(embed=embed)
 
-# CHANGE COOLDOWN BACK TO 45
 @bot.command(name="ETHANEDGEPLAY", aliases=["EEP", "EDGEPLAY"])
-@commands.cooldown(1, 2, commands.BucketType.guild)
+@commands.cooldown(1, 45, commands.BucketType.guild)
 async def eth_edge(ctx, success="100"):
     try:
         success = int(success)
     except ValueError:
         await ctx.channel.send("Bro you gotta give me an integer")
         return
-    # CHANGE THIS BACK TO 30
-    time = 5
+    time = 30
     rates = general_info.find_one({"type": "currency"})
     tokens_rate = rates["tokens_rate"]
     coins_rate = rates["coins_rate"]
@@ -732,7 +730,7 @@ async def eth_edge(ctx, success="100"):
             "multiplier": multiplier,
             "bonus": bonus,
             "total": total,
-            "inflation_total": inflation_total
+            "inflation_total": round(inflation_total, 2)
         }
         return data
 
@@ -748,7 +746,7 @@ async def eth_edge(ctx, success="100"):
             "rate_score": rate_score,
             "multiplier": multiplier,
             "total": total,
-            "inflation_total": inflation_total
+            "inflation_total": round(inflation_total, 2)
         }
         return data
 
@@ -769,28 +767,46 @@ async def eth_edge(ctx, success="100"):
         for msg in messages:
             if (msg.content != "ELEP"):
                 continue
-            name = msg.author.name
+            id = msg.author.id
             count += 1
-            if (name not in per_user_stats):
-                per_user_stats[name] = 1
-            elif (name in per_user_stats):
-                per_user_stats[name] = per_user_stats.get(name) + 1
-
-        print(per_user_stats)
+            if (id not in per_user_stats):
+                per_user_stats[id] = 1
+            elif (id in per_user_stats):
+                per_user_stats[id] = per_user_stats.get(id) + 1
 
         users = len(per_user_stats)
+        user_earnings = ""
         if (int(count) >= int(success)):
             tokens = await calculate_tokens(users, count, success, tokens_rate)
             coins = await calculate_coins(users, count, success, coins_rate)
+            for key, value in per_user_stats.items():
+                msg_percent = value / count
+                earned_tokens = msg_percent * tokens['inflation_total']
+                earned_coins = msg_percent * coins['inflation_total']
+                user = bot.get_user(key).name
+                query = {
+                    "id": int(key)
+                }
+                data = {
+                    "$inc":
+                    {
+                        "coins": earned_coins,
+                        "tokens": earned_tokens
+                    }
+                }
+                ethan_tokens.update_one(query, data)
+                user_earnings += f"**{user}**: **{value}** msgs (**{msg_percent * 100:.2f}**%) = **{earned_tokens}**{token_symbol} + **{earned_coins}**{coin_symbol}\n"
+            description = f"Token Payout: **{tokens['inflation_total']}**{token_symbol}\nCoin Payout: **{coins['inflation_total']}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings:**__\n{user_earnings}"
         else:
             tokens = 0
-            coins = 0
+            coins = 0            
+            for key, value in per_user_stats.items():
+                user = bot.get_user(key).name
+                msg_percent = value / count
+                user_earnings += f"**{user}**: **{value}** msgs (**{msg_percent * 100:.2f}**%)"
+            description = f"Token Payout: **{tokens}**{token_symbol}\nCoin Payout: **{coins}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings**__\n{user_earnings}"
 
-        user_earnings = ""
-        for key, value in per_user_stats.items():
-            user_earnings += f"**{key}**: **{value}** msgs\n"
 
-        description = f"Token Payout: **{tokens['inflation_total']}**{token_symbol}\nCoin Payout: **{coins['inflation_total']}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings**__\n{user_earnings}"
         embed = discord.Embed(title="__**Results:**__", description=description)
         await ctx.channel.send(embed=embed)
         await asyncio.sleep(2)
@@ -804,8 +820,7 @@ async def eth_edge(ctx, success="100"):
     embed=discord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ELEP' FOR 30 SECONDS", description=f"Goal: {success}\n")
     await ctx.channel.send(embed=embed)
     
-    # CHANGE BACK TO 5
-    delay = 2
+    delay = 5
     for x in range(delay):
         await asyncio.sleep(1)
         await ctx.channel.send(str(delay - x))
@@ -816,8 +831,7 @@ async def eth_edge(ctx, success="100"):
     tally = asyncio.create_task(counter(ctx))
     await tally
 
-
-@bot.command(name="ELIMINATE", aliases=["eliminate", "elim", "ELIM"])
+@bot.command(name="eliminate", aliases=["elim"])
 @commands.cooldown(1, 30, commands.BucketType.user)
 async def eliminate(ctx, member: discord.Member):
     if (member.guild_permissions.administrator):
@@ -845,6 +859,12 @@ async def random_word(ctx):
     words = json.loads(req.text)
     word = random.choice(words)
     await ctx.channel.send(f"Your word is: {word}")
+
+@bot.command(name="wtf")
+@commands.cooldown(1, 25, commands.BucketType.user)
+async def navy_seal(ctx):
+    text = "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills. I am trained in gorilla warfare and I'm the top sniper in the entire US armed forces. You are nothing to me but just another target. I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words. You think you can get away with saying that shit to me over the Internet? Think again, fucker. As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot. The storm that wipes out the pathetic little thing you call your life. You're fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that's just with my bare hands. Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit. If only you could have known what unholy retribution your little \"clever\" comment was about to bring down upon you, maybe you would have held your fucking tongue. But you couldn't, you didn't, and now you're paying the price, you goddamn idiot. I will shit fury all over you and you will drown in it. You're fucking dead, kiddo."
+    await ctx.channel.send(text)
 
 @bot.event
 async def on_message(message):
@@ -897,7 +917,7 @@ async def on_message(message):
             await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
 
     await bot.process_commands(message)
-"""
+
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
@@ -906,7 +926,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
     else:
         print(error)
-"""
+
 
 bot.loop.create_task(pping())
 bot.run(TOKEN)
