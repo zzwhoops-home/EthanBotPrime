@@ -15,8 +15,8 @@ import discord
 from discord.ext import commands
 
 from dotenv import load_dotenv
-
 load_dotenv()
+
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 USER = os.getenv('USER')
@@ -370,14 +370,26 @@ async def leaderboard(ctx, currency = ""):
 
 @bot.command(name="MURDERINFLATIONWITHARUSTYFUCKINGKNIFE")
 async def murder(ctx):
+    murder = 0.001
     image="https://cms.qz.com/wp-content/uploads/2016/12/demon.jpg?quality=75&strip=all&w=1600&h=900&crop=1"
     data = {
         "$mul":
         {
-            "tokens": 0.0000001
+            "tokens": murder
         }
     }
     ethan_tokens.update_many(filter={"tokens":{"$not":{"$eq":0}}}, update=data)
+    query = {
+        "type": "currency"
+    }
+    cur_rate = general_info.find_one(query)["tokens_rate"]
+    new_rate = cur_rate * murder
+    data = {
+        "$set": {
+            "tokens_rate": new_rate
+        }
+    }
+    general_info.update_one(query, data)
     await ctx.channel.send(image)
 
 @bot.command(name="HYPERINFLATION", aliases=["inflate"])
@@ -666,8 +678,8 @@ async def pping():
         print(f"Seconds until target 3: {seconds_until_target}")
         target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
         seconds_until_target = math.ceil((target - now).total_seconds())
-        await activate_pp(announce=True)
         await asyncio.sleep(seconds_until_target)
+        await activate_pp(announce=True)
 
 async def add_froligarchs(guild, members):
     role = guild.get_role(841482931255115816)
@@ -755,14 +767,15 @@ async def eth_edge(ctx, success="100"):
         users = 0
         per_user_stats = {}
 
-        now = datetime.datetime.utcnow()
-        done = now + datetime.timedelta(seconds=time + 0.5)
+        first = datetime.datetime.utcnow()
         await asyncio.sleep(time)
 
-        await ctx.channel.send("Tallying love for edge play...")
-        await asyncio.sleep(2)
+        embed = discord.Embed(title="__**STOP**__", description="Tallying love for edge play...")
+        await ctx.channel.send(embed=embed)
+        await asyncio.sleep(1.5)
 
-        messages = await ctx.channel.history(limit=None, before=done, after=now).flatten()
+        now = datetime.datetime.utcnow()
+        messages = await ctx.channel.history(limit=None, before=now, after=first).flatten()
 
         for msg in messages:
             if (msg.content != "ELEP"):
@@ -795,8 +808,8 @@ async def eth_edge(ctx, success="100"):
                     }
                 }
                 ethan_tokens.update_one(query, data)
-                user_earnings += f"**{user}**: **{value}** msgs (**{msg_percent * 100:.2f}**%) = **{earned_tokens}**{token_symbol} + **{earned_coins}**{coin_symbol}\n"
-            description = f"Token Payout: **{tokens['inflation_total']}**{token_symbol}\nCoin Payout: **{coins['inflation_total']}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings:**__\n{user_earnings}"
+                user_earnings += f"**{user}**: **{value}** msgs (**{msg_percent * 100:.2f}**%) = **{earned_tokens:,.2f}**{token_symbol} + **{earned_coins:,.2f}**{coin_symbol}\n"
+            description = f"Token Payout: **{tokens['inflation_total']:,.2f}**{token_symbol}\nCoin Payout: **{coins['inflation_total']:,.2f}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings:**__\n{user_earnings}"
         else:
             tokens = 0
             coins = 0            
@@ -805,7 +818,6 @@ async def eth_edge(ctx, success="100"):
                 msg_percent = value / count
                 user_earnings += f"**{user}**: **{value}** msgs (**{msg_percent * 100:.2f}**%)"
             description = f"Token Payout: **{tokens}**{token_symbol}\nCoin Payout: **{coins}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings**__\n{user_earnings}"
-
 
         embed = discord.Embed(title="__**Results:**__", description=description)
         await ctx.channel.send(embed=embed)
@@ -817,10 +829,39 @@ async def eth_edge(ctx, success="100"):
             await ctx.channel.send("you tried lmao you suck\n**YOU SUCK SKILL ISSUE LMAO**")
             await ctx.channel.send("https://imgur.com/a/vlkjkxv")
 
+        return ([count, users])
+
+    async def record_check(ctx, stats):
+        query = {
+            "type": "records"
+        }
+        records = general_info.find_one(query)["EEP"]
+        msgs = records["msgs"]
+        users = records["users"]
+
+        if (stats[0] > msgs):
+            description = f"Original: **{msgs}** msgs, **{users}** users\nNew: **{stats[0]}** msgs, **{stats[1]}** users"
+            embed = discord.Embed(title="**New Record!**", description=description)
+            await ctx.channel.send(embed=embed)
+        else:
+            return
+
+        data = {
+            "$set":
+            {
+                "EEP": {
+                    "msgs": stats[0],
+                    "users": stats[1]
+                }
+            }
+        }
+        general_info.update_one(query, data)
+        
+
     embed=discord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ELEP' FOR 30 SECONDS", description=f"Goal: {success}\n")
     await ctx.channel.send(embed=embed)
     
-    delay = 5
+    delay = 3
     for x in range(delay):
         await asyncio.sleep(1)
         await ctx.channel.send(str(delay - x))
@@ -828,8 +869,8 @@ async def eth_edge(ctx, success="100"):
     await asyncio.sleep(1)
     await ctx.channel.send("**-=-=- GO -=-=-**")
 
-    tally = asyncio.create_task(counter(ctx))
-    await tally
+    stats = await counter(ctx)
+    await record_check(ctx, stats)
 
 @bot.command(name="eliminate", aliases=["elim"])
 @commands.cooldown(1, 30, commands.BucketType.user)
@@ -860,6 +901,13 @@ async def random_word(ctx):
     word = random.choice(words)
     await ctx.channel.send(f"Your word is: {word}")
 
+@bot.command(name="JEFF")
+async def jeff(ctx):
+    user = bot.get_user(495332056247697428)
+    for x in range(3):
+        await ctx.channel.send(user.mention)
+    await ctx.message.delete()
+
 @bot.command(name="wtf")
 @commands.cooldown(1, 25, commands.BucketType.user)
 async def navy_seal(ctx):
@@ -882,6 +930,8 @@ async def on_message(message):
             await message.channel.send("ethan be gettin' real jiggy")
         if 'sam' in msg and ('sister' in msg or 'fisher' in msg):
             await message.channel.send("<:sexualrelations:803707185963991081>")
+        if 'sam' in msg:
+            await message.channel.send("<:cursed:798989515108646922>")
         if msg == 'ethan\'s insane announcement' and (message.channel.id == 765710257753948190):
             await message.channel.send("ethan's insane announcement")
         if 'china' in msg:
@@ -892,6 +942,8 @@ async def on_message(message):
             await message.channel.send("lol penis")
         if 'sex' in msg:
             await message.channel.send("sex ( ͡° ͜ʖ ͡°)")
+        if ':say_that_again:' in msg:
+            await message.channel.send("me and daniel when we see that ethan is naked")
     if (message.author.id == 292448459909365760):
         if 'sad' in message.content.strip().lower():
             await message.channel.send("<:zzwhoops_cries:813585484441714698>")
@@ -917,7 +969,7 @@ async def on_message(message):
             await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
 
     await bot.process_commands(message)
-
+"""
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
@@ -926,7 +978,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
     else:
         print(error)
-
+"""
 
 bot.loop.create_task(pping())
 bot.run(TOKEN)
