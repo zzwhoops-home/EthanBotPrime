@@ -5,6 +5,7 @@ import random
 import asyncio
 import datetime
 import time
+import aioschedule as schedule
 import math
 import pymongo
 from pymongo import MongoClient
@@ -46,15 +47,75 @@ db=client.bot_data
 ethan_tokens = db.ethan_tokens
 general_info = db.general_info
 
-@bot.event
-async def on_ready():
-    for guild in bot.guilds:
-        if guild.name == GUILD:
-            break
-    print(
-        f'{bot.user} is connected to the following guild:\n'
-        f'{guild.name} (id: {guild.id})\n'
-    )
+class Listeners(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        for guild in bot.guilds:
+            if guild.name == GUILD:
+                break
+        print(
+            f'{bot.user} is connected to the following guild:\n'
+            f'{guild.name} (id: {guild.id})\n'
+        )
+        await Froligarch.pping()
+    
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if (message.content[:5].strip() == prefix):
+            return
+        if (bot.user.id != message.author.id):
+            msg = message.content.strip().lower()
+            if 'ethan' in msg and message.channel.id != 765710257753948190:
+                await message.channel.send("sex")
+            if 'connor' in msg:
+                await message.channel.send("ethan sex")
+            if 'edge' in msg and 'play' in msg:
+                await message.channel.send("ethedge ethplay ethgasm")
+            if 'higgy' in msg:
+                await message.channel.send("ethan be gettin' real jiggy")
+            if 'sam' in msg and ('sister' in msg or 'fisher' in msg):
+                await message.channel.send("<:sexualrelations:803707185963991081>")
+            if msg == 'ethan\'s insane announcement' and (message.channel.id == 765710257753948190):
+                await message.channel.send("ethan's insane announcement")
+            if 'china' in msg:
+                await message.channel.send("荣耀归于中国")
+            if 'egg' in msg:
+                await message.channel.send("egg")
+            if 'penis' in msg:
+                await message.channel.send("lol penis")
+            if 'sex' in msg:
+                await message.channel.send("sex ( ͡° ͜ʖ ͡°)")
+            if ':say_that_again:' in msg:
+                await message.channel.send("me and daniel when we see that ethan is naked")
+        if (message.author.id == 292448459909365760):
+            if 'sad' in message.content.strip().lower():
+                await message.channel.send("<:zzwhoops_cries:813585484441714698>")
+        if (message.author.id == 390601966423900162):
+            if 'scribbles notes' in message.content.lower():
+                await message.channel.send("https://tenor.com/bi7Db.gif")
+        if (message.author.id == 501505695091392527):
+            if 'sister' in message.content:
+                await message.channel.send("<:sexualrelations:803707185963991081>")
+            if (message.channel.id == 537757338300317739):
+                if 'parsfuk' in message.content.lower().replace(" ", ""):
+                    for x in range(7):
+                        await message.channel.send("https://tenor.com/bMkPz.gif")
+                    embed = discord.Embed(title="No, Sam, #parsfuk **WILL NOT** be ***FUCKING LIBERATED***", description="__***DENIED***__")
+                    await message.channel.send(embed=embed)
+            if "fight" in message.content.lower().replace(" ", "") and "continue" in message.content.lower().replace(" ", ""):
+                embed = discord.Embed(title="*Not after I'm done with you*...")
+                await message.channel.send(embed=embed)
+                await asyncio.sleep(2)
+                await message.channel.send(f"**Acquiring location of user {message.author.mention}...**")
+                await asyncio.sleep(5)
+                await message.channel.send("**Location found!**")
+                await asyncio.sleep(1)
+                await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
+
+        await bot.process_commands(message)
 
 async def create_account(ctx, member=None):
     if (member == None):
@@ -557,155 +618,6 @@ async def lucky_numbers(ctx, currency = "", amount = ""):
     except asyncio.TimeoutError:
         await ctx.channel.send("Type at most **TWO NUMBERS** in *30* seconds **ITS NOT THAT HARD**.\nI should just take your money but... that would be a scam. EthanBot does not scam.")    
 
-@bot.command(name="stocks", aliases=["stock", "stonk", "stonks"])
-@commands.cooldown(1, 6969, commands.BucketType.user)
-async def stocks(ctx):
-    async def hourly():
-        pass
-    url = "https://yfapi.net/v6/finance/quote"
-    querystring = {"symbols":"CL=F,GC=F,ZW=F,ZC=F,CU=F"}
-    headers = {
-        'x-api-key': STOCKS_API_KEY
-        }
-    response = requests.request("GET", url, headers=headers, params=querystring)
-
-    data = response.json()['quoteResponse']['result']
-
-    description = ""
-    for good in data:
-        name = good['shortName']
-        currency = good['currency']
-        price = good['regularMarketPrice']
-        if (currency == "USX"):
-            price /= 100
-        description += f"{name}: ${price}/unit\n"
-
-    embed = discord.Embed(title="Stonks", description=description)
-    await ctx.channel.send(embed=embed)
-
-@bot.command(name="roll", aliases=['dice', 'r'])
-async def roll(ctx, number=str(100)):
-    try:
-        if (str(float(number)) == number):
-            await ctx.channel.send(f"You ever find a {number} sided die? Well, no, so give me an integer idiot")
-            return
-    except ValueError:
-        await ctx.channel.send(f"You like... fucking... <:are_you_high:847849655990485002> I can't roll letters nincompoop")
-        return
-
-    roll = random.randint(0, int(number))
-    await ctx.channel.send(f"Rolling **d{number}**...")
-    await ctx.channel.send(f"You rolled **{roll:,}**.")
-
-@bot.command(name="manualtally")
-@commands.has_permissions(administrator=True)
-async def activate_pp(ctx=None, announce=False):
-    await bot.wait_until_ready()
-    
-    guild = bot.get_guild(423583970328838154)
-    channel = guild.get_channel(866168036770578432)
-    
-    now = datetime.datetime.utcnow()
-    after = datetime.datetime.combine(now.date(), PP_START)
-    before = datetime.datetime.combine(now.date(), PP_END)
-    duration = (before - after).total_seconds()
-    total_seconds = (before - now).total_seconds()
-
-    print(f"Frogging: {total_seconds}sec remaining")
-    if (announce == True):
-        await channel.send(f"<@&652326925800570880> {prefix}pp")
-    if (total_seconds > 0 and total_seconds <= duration):
-        await asyncio.sleep(total_seconds)
-    elif (total_seconds > duration):
-        return
-    await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
-
-    now_utc = datetime.datetime.utcnow()
-    messages = await channel.history(limit=None, before=before, after=after).flatten()
-    pps = {}
-    for msg in messages:
-        if (msg.author.id != bot.user.id):
-            continue
-        embeds = msg.embeds
-        if embeds == []:
-            continue
-        for embed in embeds:
-            footer = str(embed.footer.text)
-            if (embed.title != "peepee size machine"):
-                continue
-            if (footer not in pps) or len(pps) == 0:
-                cur = embed.description.split("\n")
-                pps[footer] = str(cur[1]).count("=")
-    pps = dict(sorted(pps.items(), key=lambda item: item[1], reverse=True))
-    print(pps)
-    description = ""
-    if len(pps.items()) == 0:
-        description = f"xd yall suck, not even a single pp. Fuckin disgracing the Glorious Froligarchy."
-    else:
-        count = 0
-        units = random.choice(["cm", "mm", "m", "in", "ft", "yd"])
-        for key, value in pps.items():
-            count += 1
-            text = f"**({count}).** "
-            if (count <= 2):
-                text += "<:poggies:826811320073453598> **FROLIGARCH** "
-            member = guild.get_member(int(key))
-            text += f"**{member.name}**: {value} {units}\n"
-            description += text
-
-    embed = discord.Embed(title="LEADERBOARD FOR TODAY", url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
-    await channel.send(embed=embed)
-    await remove_froligarchs(guild)
-    await add_froligarchs(guild, list(pps.items())[:2])
-
-async def pping():
-
-    now = datetime.datetime.utcnow()
-    target = datetime.datetime.combine(now.date(), PP_START)
-    seconds_until_target = math.ceil((target - now).total_seconds())
-    print(f"Seconds until target 1: {seconds_until_target}")
-
-    if (seconds_until_target < 0):
-        if (seconds_until_target >= -7200):
-            await activate_pp()
-        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
-        seconds_until_target = math.ceil((target - now).total_seconds())
-        print(f"Seconds until target 2: {seconds_until_target}")
-    # maybe replace 7200 with the difference b/w PP_START and PP_END
-    await asyncio.sleep(seconds_until_target)
-    await activate_pp(announce=True)
-    while True:
-        print(f"Seconds until target 3: {seconds_until_target}")
-        target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
-        seconds_until_target = math.ceil((target - now).total_seconds())
-        await asyncio.sleep(seconds_until_target)
-        await activate_pp(announce=True)
-
-async def add_froligarchs(guild, members):
-    role = guild.get_role(841482931255115816)
-    for member in members:
-        frog = guild.get_member(int(member[0]))
-        await frog.add_roles(role)
-
-async def remove_froligarchs(guild):
-    role = guild.get_role(841482931255115816)
-    role_members = role.members
-    for member in role_members:
-        await member.remove_roles(role)
-
-@bot.command(name='pp')
-async def egadpp(ctx):
-    def peepee():
-        length = random.randint(0, 15)
-        return length
-
-    title = "peepee size machine"
-    count = peepee()
-    description = f"{ctx.message.author.name}'s penis\n8{('=' * count)}D ({count})"
-    embed=discord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
-    embed.set_footer(text=f"{ctx.message.author.id}")
-    await ctx.send(embed=embed)
-
 @bot.command(name="ETHANEDGEPLAY", aliases=["EEP", "EDGEPLAY"])
 @commands.cooldown(1, 45, commands.BucketType.guild)
 async def eth_edge(ctx, success="100"):
@@ -872,103 +784,200 @@ async def eth_edge(ctx, success="100"):
     stats = await counter(ctx)
     await record_check(ctx, stats)
 
-@bot.command(name="eliminate", aliases=["elim"])
-@commands.cooldown(1, 30, commands.BucketType.user)
-async def eliminate(ctx, member: discord.Member):
-    if (member.guild_permissions.administrator):
-        await ctx.channel.send("https://i.pinimg.com/originals/0f/fd/29/0ffd29da68cc8176440779fcdb5b87bb.jpg")
-        eliminate.reset_cooldown(ctx)
+@bot.command(name="stocks", aliases=["stock", "stonk", "stonks"])
+@commands.cooldown(1, 6969, commands.BucketType.user)
+async def stocks(ctx):
+    async def hourly():
+        pass
+    url = "https://yfapi.net/v6/finance/quote"
+    querystring = {"symbols":"CL=F,GC=F,ZW=F,ZC=F,CU=F"}
+    headers = {
+        'x-api-key': STOCKS_API_KEY
+        }
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    data = response.json()['quoteResponse']['result']
+
+    description = ""
+    for good in data:
+        name = good['shortName']
+        currency = good['currency']
+        price = good['regularMarketPrice']
+        if (currency == "USX"):
+            price /= 100
+        description += f"{name}: ${price}/unit\n"
+
+    embed = discord.Embed(title="Stonks", description=description)
+    await ctx.channel.send(embed=embed)
+
+@bot.command(name="roll", aliases=['dice', 'r'])
+async def roll(ctx, number=str(100)):
+    try:
+        if (str(float(number)) == number):
+            await ctx.channel.send(f"You ever find a {number} sided die? Well, no, so give me an integer idiot")
+            return
+    except ValueError:
+        await ctx.channel.send(f"You like... fucking... <:are_you_high:847849655990485002> I can't roll letters nincompoop")
         return
-    nick = member.display_name
-    await ctx.channel.send(f'{member.mention} is a lil shit')
-    await asyncio.sleep(1)
-    await ctx.channel.send('lmao L get eliminated')
-    await member.edit(nick="Eliminated")
-    await asyncio.sleep(9)
-    await ctx.channel.send('oh wait nvm, zzwhoops told me odro days are over.')
-    await asyncio.sleep(3)
-    await ctx.channel.send('sorry!')
-    await asyncio.sleep(1)
-    await member.edit(nick=nick)
 
-    await ctx.message.delete()
+    roll = random.randint(0, int(number))
+    await ctx.channel.send(f"Rolling **d{number}**...")
+    await ctx.channel.send(f"You rolled **{roll:,}**.")
 
-@bot.command(name="randomword", aliases=["random", "rword"])
-@commands.cooldown(1, 2, commands.BucketType.user)
-async def random_word(ctx):
-    req = requests.get("https://random-word-api.herokuapp.com/word?number=1")
-    words = json.loads(req.text)
-    word = random.choice(words)
-    await ctx.channel.send(f"Your word is: {word}")
+class Froligarch(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-@bot.command(name="JEFF")
-async def jeff(ctx):
-    user = bot.get_user(495332056247697428)
-    for x in range(3):
-        await ctx.channel.send(user.mention)
-    await ctx.message.delete()
+    @commands.command(name="manualtally")
+    @commands.has_permissions(administrator=True)
+    async def activate_pp(self, ctx=None, announce=False):
+        await bot.wait_until_ready()
+        
+        guild = bot.get_guild(423583970328838154)
+        channel = guild.get_channel(866168036770578432)
+        
+        now = datetime.datetime.utcnow()
+        after = datetime.datetime.combine(now.date(), PP_START)
+        before = datetime.datetime.combine(now.date(), PP_END)
+        duration = (before - after).total_seconds()
+        total_seconds = (before - now).total_seconds()
 
-@bot.command(name="wtf")
-@commands.cooldown(1, 25, commands.BucketType.user)
-async def navy_seal(ctx):
-    text = "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills. I am trained in gorilla warfare and I'm the top sniper in the entire US armed forces. You are nothing to me but just another target. I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words. You think you can get away with saying that shit to me over the Internet? Think again, fucker. As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot. The storm that wipes out the pathetic little thing you call your life. You're fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that's just with my bare hands. Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit. If only you could have known what unholy retribution your little \"clever\" comment was about to bring down upon you, maybe you would have held your fucking tongue. But you couldn't, you didn't, and now you're paying the price, you goddamn idiot. I will shit fury all over you and you will drown in it. You're fucking dead, kiddo."
-    await ctx.channel.send(text)
+        print(f"Frogging: {total_seconds}sec remaining")
+        if (announce == True):
+            await channel.send(f"<@&652326925800570880> {prefix}pp")
+        if (total_seconds > 0 and total_seconds <= duration):
+            await asyncio.sleep(total_seconds)
+        elif (total_seconds > duration):
+            return
+        await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
 
-@bot.event
-async def on_message(message):
-    if (message.content[:5].strip() == prefix):
-        return
-    if (bot.user.id != message.author.id):
-        msg = message.content.strip().lower()
-        if 'ethan' in msg and message.channel.id != 765710257753948190:
-            await message.channel.send("sex")
-        if 'connor' in msg:
-            await message.channel.send("ethan sex")
-        if 'edge' in msg and 'play' in msg:
-            await message.channel.send("ethedge ethplay ethgasm")
-        if 'higgy' in msg:
-            await message.channel.send("ethan be gettin' real jiggy")
-        if 'sam' in msg and ('sister' in msg or 'fisher' in msg):
-            await message.channel.send("<:sexualrelations:803707185963991081>")
-        if 'sam' in msg:
-            await message.channel.send("<:cursed:798989515108646922>")
-        if msg == 'ethan\'s insane announcement' and (message.channel.id == 765710257753948190):
-            await message.channel.send("ethan's insane announcement")
-        if 'china' in msg:
-            await message.channel.send("荣耀归于中国")
-        if 'egg' in msg:
-            await message.channel.send("egg")
-        if 'penis' in msg:
-            await message.channel.send("lol penis")
-        if 'sex' in msg:
-            await message.channel.send("sex ( ͡° ͜ʖ ͡°)")
-        if ':say_that_again:' in msg:
-            await message.channel.send("me and daniel when we see that ethan is naked")
-    if (message.author.id == 292448459909365760):
-        if 'sad' in message.content.strip().lower():
-            await message.channel.send("<:zzwhoops_cries:813585484441714698>")
-    if (message.author.id == 390601966423900162):
-        if 'scribbles notes' in message.content.lower():
-            await message.channel.send("https://tenor.com/bi7Db.gif")
-    if (message.author.id == 501505695091392527):
-        if 'sister' in message.content:
-            await message.channel.send("<:sexualrelations:803707185963991081>")
-        if 'request' in message.content.lower().replace(" ", "") and 'parsfuk' in message.content.lower().replace(" ", ""):
-            for x in range(7):
-                await message.channel.send("https://tenor.com/bMkPz.gif")
-            embed = discord.Embed(title="No, Sam, #parsfuk **WILL NOT** be ***FUCKING LIBERATED***", description="__***DENIED***__")
-            await message.channel.send(embed=embed)
-        if "fight" in message.content.lower().replace(" ", "") and "continue" in message.content.lower().replace(" ", ""):
-            embed = discord.Embed(title="*Not after I'm done with you*...")
-            await message.channel.send(embed=embed)
-            await asyncio.sleep(2)
-            await message.channel.send(f"**Acquiring location of user {message.author.mention}...**")
-            await asyncio.sleep(5)
-            await message.channel.send("**Location found!**")
-            await asyncio.sleep(1)
-            await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
+        now_utc = datetime.datetime.utcnow()
+        messages = await channel.history(limit=None, before=before, after=after).flatten()
+        pps = {}
+        for msg in messages:
+            if (msg.author.id != bot.user.id):
+                continue
+            embeds = msg.embeds
+            if embeds == []:
+                continue
+            for embed in embeds:
+                footer = str(embed.footer.text)
+                if (embed.title != "peepee size machine"):
+                    continue
+                if (footer not in pps) or len(pps) == 0:
+                    cur = embed.description.split("\n")
+                    pps[footer] = str(cur[1]).count("=")
+        pps = dict(sorted(pps.items(), key=lambda item: item[1], reverse=True))
+        print(pps)
+        description = ""
+        if len(pps.items()) == 0:
+            description = f"xd yall suck, not even a single pp. Fuckin disgracing the Glorious Froligarchy."
+        else:
+            count = 0
+            units = random.choice(["cm", "mm", "m", "in", "ft", "yd"])
+            for key, value in pps.items():
+                count += 1
+                text = f"**({count}).** "
+                if (count <= 2):
+                    text += "<:poggies:826811320073453598> **FROLIGARCH** "
+                member = guild.get_member(int(key))
+                text += f"**{member.name}**: {value} {units}\n"
+                description += text
 
-    await bot.process_commands(message)
+        embed = discord.Embed(title="LEADERBOARD FOR TODAY", url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
+        await channel.send(embed=embed)
+        await Froligarch.remove_froligarchs(guild)
+        await Froligarch.add_froligarchs(guild, list(pps.items())[:2])
+
+    async def pping():
+        now = datetime.datetime.utcnow()
+        target = datetime.datetime.combine(now.date(), PP_START)
+        seconds_until_target = math.ceil((target - now).total_seconds())
+        print(f"Seconds until target 1: {seconds_until_target}")
+
+        if (seconds_until_target < 0):
+            if (seconds_until_target >= -7200):
+                await Froligarch.activate_pp()
+            target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
+            seconds_until_target = math.ceil((target - now).total_seconds())
+            print(f"Seconds until target 2: {seconds_until_target}")
+        # maybe replace 7200 with the difference b/w PP_START and PP_END
+        await asyncio.sleep(seconds_until_target)
+        await Froligarch.activate_pp(announce=True)
+        while True:
+            print(f"Seconds until target 3: {seconds_until_target}")
+            target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
+            seconds_until_target = math.ceil((target - now).total_seconds())
+            await asyncio.sleep(seconds_until_target)
+            await Froligarch.activate_pp(announce=True)
+
+    async def add_froligarchs(self, guild, members):
+        role = guild.get_role(841482931255115816)
+        for member in members:
+            frog = guild.get_member(int(member[0]))
+            await frog.add_roles(role)
+
+    async def remove_froligarchs(self, guild):
+        role = guild.get_role(841482931255115816)
+        role_members = role.members
+        for member in role_members:
+            await member.remove_roles(role)
+
+    @commands.command(name='pp')
+    async def pp(self, ctx):
+        def peepee():
+            length = random.randint(0, 15)
+            return length
+
+        title = "peepee size machine"
+        count = peepee()
+        description = f"{ctx.message.author.name}'s penis\n8{('=' * count)}D ({count})"
+        embed=discord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
+        embed.set_footer(text=f"{ctx.message.author.id}")
+        await ctx.send(embed=embed)
+
+class Fun(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name="eliminate", aliases=["elim"])
+    @commands.cooldown(1, 30, commands.BucketType.user)
+    async def eliminate(self, ctx, member: discord.Member = None):
+        if (member == None):
+            await ctx.channel.send("Hey you little shit I can't eliminate no one")
+            return
+        if (member.guild_permissions.administrator):
+            await ctx.channel.send("https://i.pinimg.com/originals/0f/fd/29/0ffd29da68cc8176440779fcdb5b87bb.jpg")
+            self.eliminate.reset_cooldown(ctx)
+            return
+        nick = member.display_name
+        await ctx.channel.send(f'{member.mention} is a lil shit')
+        await asyncio.sleep(1)
+        await ctx.channel.send('lmao L get eliminated')
+        await member.edit(nick="Eliminated")
+        await asyncio.sleep(9)
+        await ctx.channel.send('oh wait nvm, zzwhoops told me odro days are over.')
+        await asyncio.sleep(3)
+        await ctx.channel.send('sorry!')
+        await asyncio.sleep(1)
+        await member.edit(nick=nick)
+
+        await ctx.message.delete()
+
+    @commands.command(name="randomword", aliases=["random", "rword"])
+    @commands.cooldown(1, 2, commands.BucketType.user)
+    async def random_word(self, ctx):
+        req = requests.get("https://random-word-api.herokuapp.com/word?number=1")
+        words = json.loads(req.text)
+        word = random.choice(words)
+        await ctx.channel.send(f"Your word is: {word}")
+
+    @commands.command(name="wtf")
+    @commands.cooldown(1, 25, commands.BucketType.user)
+    async def navy_seal(self, ctx):
+        text = "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills. I am trained in gorilla warfare and I'm the top sniper in the entire US armed forces. You are nothing to me but just another target. I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words. You think you can get away with saying that shit to me over the Internet? Think again, fucker. As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot. The storm that wipes out the pathetic little thing you call your life. You're fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that's just with my bare hands. Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit. If only you could have known what unholy retribution your little \"clever\" comment was about to bring down upon you, maybe you would have held your fucking tongue. But you couldn't, you didn't, and now you're paying the price, you goddamn idiot. I will shit fury all over you and you will drown in it. You're fucking dead, kiddo."
+        await ctx.channel.send(text)
+
 """
 @bot.event
 async def on_command_error(ctx, error):
@@ -980,5 +989,7 @@ async def on_command_error(ctx, error):
         print(error)
 """
 
-bot.loop.create_task(pping())
+bot.add_cog(Listeners(bot))
+bot.add_cog(Fun(bot))
+bot.add_cog(Froligarch(bot))
 bot.run(TOKEN)
