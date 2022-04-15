@@ -3,9 +3,7 @@ import json
 import os
 import random
 import asyncio
-import datetime
-import time
-import aioschedule as schedule
+from datetime import datetime, timedelta, time
 import math
 import pymongo
 from pymongo import MongoClient
@@ -13,7 +11,9 @@ from pprint import pprint
 import requests
 
 import discord
-from discord.ext import commands
+from discord.ext import tasks, commands
+from discord.interactions import Interaction
+from discord.ui import button, View, Button
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -26,8 +26,8 @@ PWD = os.getenv('PWD')
 STOCKS_API_KEY = os.getenv("YAHOO_API_KEY")
 
 # pping:
-PP_START = datetime.time(20, 00, 00)
-PP_END = datetime.time(22, 00, 00)
+PP_START = time(20, 00, 00)
+PP_END = time(22, 00, 00)
 
 # currency symbols:
 token_symbol = "<:ethanger:763411726741143572>"
@@ -552,7 +552,7 @@ class Economy(commands.Cog):
             self.eth_edge.reset_cooldown(ctx)
             return
         elif (success >= limit):
-            await ctx.channel.send(f"I will leak my nudes if you somehow get over {limit}. Pick another number shitstick!")
+            await ctx.channel.send(f"I will leak my OnlyFans if you somehow get over {limit}. Pick another number!")
             self.eth_edge.reset_cooldown(ctx)
             return
 
@@ -594,14 +594,14 @@ class Economy(commands.Cog):
             users = 0
             per_user_stats = {}
 
-            first = datetime.datetime.utcnow()
+            first = datetime.utcnow()
             await asyncio.sleep(time)
 
             embed = discord.Embed(title="__**STOP**__", description="Tallying love for edge play...")
             await ctx.channel.send(embed=embed)
             await asyncio.sleep(1.5)
 
-            now = datetime.datetime.utcnow()
+            now = datetime.utcnow()
             messages = await ctx.channel.history(limit=None, before=now, after=first).flatten()
 
             for msg in messages:
@@ -699,11 +699,66 @@ class Economy(commands.Cog):
         stats = await counter(ctx)
         await record_check(ctx, stats)
 
+class Stocks(commands.Cog):
+    good_names = ["Crude Oil", "Gold", "Wheat", "Corn", "Ethanol"]
+    base_rate = 12
+    tokens_rate = base_rate
+
+    def __init__(self, bot):
+        self.bot = bot
+        self.refresh_stocks.start()
+
     @commands.command(name="stocks", aliases=["stock", "stonk", "stonks"])
-    @commands.cooldown(1, 6969, commands.BucketType.user)
-    async def stocks(self, ctx):
-        async def hourly():
+    @commands.cooldown(1, 1, commands.BucketType.user)
+    async def stocks(self, ctx, choice=""):
+        async def update_rate():
+            self.tokens_rate = self.base_rate * general_info.find_one({"type": "currency"})["tokens_rate"]
+
+        async def view_stocks(ctx):
+            await update_rate()
+
+            stocks = stock_info.find()
+
+            description = f"**Conversion Rate**: `{self.tokens_rate:,.2f}`{token_symbol}/USD\n\n"
+            for stock in stocks:
+                symbol = stock['symbol'].replace('=F', '')
+                name = stock['name']
+                price = stock['price'] * self.tokens_rate
+                currency = stock['currency']
+                if (currency == 'USX'):
+                    price /= 100
+                description += f"({symbol}) **{name}**: `{price:,.2f}`{token_symbol}/unit\n"
+
+            query = {"type": "stocks"}
+            last_update = general_info.find_one(query)['update_time']
+            date_time = last_update.strftime("%m/%d/%Y %I:%M:%S %p")
+            description += f"\n**Data last updated at:** {date_time}"
+            
+            embed = discord.Embed(title="Stonks", description=description)
+            await ctx.channel.send(embed=embed)
+
+        async def buy_stocks(ctx):
             pass
+
+        if (choice == ""):
+            await ctx.channel.send("Bro you gotta tell me what you want to do,\nimagine if you went up to your teacher and\nasked hey, how do you stonks?\nDo you want to 'view', 'buy' or 'sell' your stocks?")
+        if (choice == "view"):
+            await view_stocks(ctx)
+        if (choice == "buy"):
+            await buy_stocks(ctx)
+
+    @tasks.loop(hours=1)
+    async def refresh_stocks(self):
+        now = datetime.now()
+        print("Refreshing stocks at " + str(now))
+        query = {"type": "stocks"}
+        data = {
+            "$set": {
+                "update_time": now
+            }
+        }
+        general_info.find_one_and_update(query, data, upsert=True)
+
         url = "https://yfapi.net/v6/finance/quote"
         querystring = {"symbols":"CL=F,GC=F,ZW=F,ZC=F,CU=F"}
         headers = {
@@ -713,15 +768,13 @@ class Economy(commands.Cog):
 
         formatted = response.json()['quoteResponse']['result']
 
-        description = ""
         for good in formatted:
-            good_names = ["Crude Oil", "Gold", "Wheat", "Corn", "Ethanol"]
             symbol = good['symbol']
             name = good['shortName']
             currency = good['currency']
             price = round(good['regularMarketPrice'], 2)
             
-            for good_name in good_names:
+            for good_name in self.good_names:
                 if (good_name in name):
                     name = good_name
                     break
@@ -736,13 +789,16 @@ class Economy(commands.Cog):
                 "price": price
             }
             stock_info.find_one_and_replace(query, data, upsert=True)
-            if (currency == "USX"):
-                price /= 100
-            description += f"({symbol}) {name}: ${price:,.2f}/unit\n"
 
-        embed = discord.Embed(title="Stonks", description=description)
-        await ctx.channel.send(embed=embed)
-
+    @refresh_stocks.before_loop
+    async def before_refresh(self):
+        # wait until X:00:00
+        now = datetime.utcnow() + timedelta(hours=6)
+        start = datetime.combine((now + timedelta(hours=1)).date(), time((now + timedelta(hours=1)).time().hour, 0, 0))
+        wait_seconds = (start - now).total_seconds()
+        print("Waiting " + str(wait_seconds) + " before starting refresh.")
+        
+        await asyncio.sleep(wait_seconds)
 
 class Gambling(commands.Cog):
     def __init__(self, bot):
@@ -766,7 +822,7 @@ class Gambling(commands.Cog):
             if (amount == "all"):
                 amount = balance
             else:
-                await ctx.channel.send(f"The fuck is {amount}{symbol}?")
+                await ctx.channel.send(f"tf is {amount}{symbol}?")
                 return
         if (amount <= 0.0):
             await ctx.channel.send(f"You have to gamble some amount of tokens or coins.\nBroke ass lil shit lmao")
@@ -858,9 +914,9 @@ class Froligarch(commands.Cog):
         guild = bot.get_guild(423583970328838154)
         channel = guild.get_channel(866168036770578432)
         
-        now = datetime.datetime.utcnow()
-        after = datetime.datetime.combine(now.date(), PP_START)
-        before = datetime.datetime.combine(now.date(), PP_END)
+        now = datetime.utcnow()
+        after = datetime.combine(now.date(), PP_START)
+        before = datetime.combine(now.date(), PP_END)
         duration = (before - after).total_seconds()
         total_seconds = (before - now).total_seconds()
 
@@ -873,7 +929,7 @@ class Froligarch(commands.Cog):
             return
         await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
 
-        now_utc = datetime.datetime.utcnow()
+        now_utc = datetime.utcnow()
         messages = await channel.history(limit=None, before=before, after=after).flatten()
         pps = {}
         for msg in messages:
@@ -893,7 +949,7 @@ class Froligarch(commands.Cog):
         print(pps)
         description = ""
         if len(pps.items()) == 0:
-            description = f"xd yall suck, not even a single pp. Fuckin disgracing the Glorious Froligarchy."
+            description = f"xd yall suck, not even a single pp. Disgracing the Glorious Froligarchy."
         else:
             count = 0
             units = random.choice(["cm", "mm", "m", "in", "ft", "yd"])
@@ -912,15 +968,15 @@ class Froligarch(commands.Cog):
         await self.add_froligarchs(guild, list(pps.items())[:2])
 
     async def pping(self):
-        now = datetime.datetime.utcnow()
-        target = datetime.datetime.combine(now.date(), PP_START)
+        now = datetime.utcnow()
+        target = datetime.combine(now.date(), PP_START)
         seconds_until_target = math.ceil((target - now).total_seconds())
         print(f"Seconds until target 1: {seconds_until_target}")
 
         if (seconds_until_target < 0):
             if (seconds_until_target >= -7200):
                 await self.activate_pp()
-            target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
+            target = datetime.combine(now.date() + timedelta(days=1), PP_START)
             seconds_until_target = math.ceil((target - now).total_seconds())
             print(f"Seconds until target 2: {seconds_until_target}")
         # maybe replace 7200 with the difference b/w PP_START and PP_END
@@ -928,7 +984,7 @@ class Froligarch(commands.Cog):
         await self.activate_pp(announce=True)
         while True:
             print(f"Seconds until target 3: {seconds_until_target}")
-            target = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), PP_START)
+            target = datetime.combine(now.date() + timedelta(days=1), PP_START)
             seconds_until_target = math.ceil((target - now).total_seconds())
             await asyncio.sleep(seconds_until_target)
             await self.activate_pp(announce=True)
@@ -969,7 +1025,7 @@ class Fun(commands.Cog):
                 await ctx.channel.send(f"You ever find a {number} sided die? Well, no, so give me an integer idiot")
                 return
         except ValueError:
-            await ctx.channel.send(f"You like... fucking... <:are_you_high:847849655990485002> I can't roll letters nincompoop")
+            await ctx.channel.send(f"You like... what... <:are_you_high:847849655990485002> I can't roll letters nincompoop")
             return
 
         roll = random.randint(0, int(number))
@@ -1020,7 +1076,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
     if isinstance(error, commands.errors.CommandInvokeError):
-        await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you. So, fuck you!")
+        await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
     else:
         print(error)
 """
@@ -1028,6 +1084,7 @@ async def on_command_error(ctx, error):
 bot.add_cog(Listeners(bot))
 bot.add_cog(Ethan(bot))
 bot.add_cog(Economy(bot))
+bot.add_cog(Stocks(bot))
 bot.add_cog(Gambling(bot))
 bot.add_cog(Fun(bot))
 bot.add_cog(Froligarch(bot))
