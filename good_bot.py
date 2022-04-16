@@ -536,7 +536,7 @@ class Economy(commands.Cog):
         except ValueError:
             await ctx.channel.send("Bro you gotta give me an integer")
             return
-        time = 3
+        time = 30
         rates = general_info.find_one({"type": "currency"})
         tokens_rate = rates["tokens_rate"]
         coins_rate = rates["coins_rate"]
@@ -598,13 +598,8 @@ class Economy(commands.Cog):
 
             now = datetime.now(timezone.utc)
             messages = await ctx.channel.history(limit=None, before=now, after=first).flatten()
-            messages_more = await ctx.channel.history(limit=10).flatten()
-            print(messages)
-            print(now)
-            print(first)
 
             for msg in messages:
-                print(msg)
                 if (msg.content != "ELEP"):
                     continue
                 id = msg.author.id
@@ -688,8 +683,7 @@ class Economy(commands.Cog):
         embed=nextcord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ELEP' FOR 30 SECONDS", description=f"Goal: {success}\n")
         await ctx.channel.send(embed=embed)
         
-        # cHANGE BACK TO 3
-        delay = 0
+        delay = 3
         for x in range(delay):
             await asyncio.sleep(1)
             await ctx.channel.send(str(delay - x))
@@ -794,8 +788,8 @@ class Stocks(commands.Cog):
     @refresh_stocks.before_loop
     async def before_refresh(self):
         # wait until X:00:00
-        now = datetime.utcnow()
-        start = datetime.combine((now + timedelta(hours=1)).date(), time((now + timedelta(hours=1)).time().hour, 0, 0))
+        now = datetime.utcnow().replace(tzinfo=timezone.utc)
+        start = datetime.combine((now + timedelta(hours=1)).date(), time((now + timedelta(hours=1)).time().hour, 0, 0)).replace(tzinfo=timezone.utc)
         wait_seconds = (start - now).total_seconds()
         print("Waiting " + str(wait_seconds) + " before starting refresh.")
         
@@ -911,28 +905,30 @@ class Froligarch(commands.Cog):
     async def on_ready(self):
         await self.pping()
 
-    async def activate_pp(self, announce=False):
+    @commands.command(name="manualtally")
+    @commands.has_permissions(administrator=True)
+    async def activate_pp(self, skip_checks=False, announce=False):
         await bot.wait_until_ready()
         
         guild = bot.get_guild(423583970328838154)
         channel = guild.get_channel(866168036770578432)
         
-        now = datetime.utcnow()
-        after = datetime.combine(now.date(), PP_START)
-        before = datetime.combine(now.date(), PP_END)
+        now = datetime.now(timezone.utc)
+        after = datetime.combine(now.date(), PP_START).replace(tzinfo=timezone.utc)
+        before = datetime.combine(now.date(), PP_END).replace(tzinfo=timezone.utc)
         duration = (before - after).total_seconds()
         total_seconds = (before - now).total_seconds()
 
-        print(f"Frogging: {total_seconds}sec remaining")
-        if (announce == True):
-            await channel.send(f"<@&652326925800570880> {prefix}pp")
-        if (total_seconds > 0 and total_seconds <= duration):
-            await asyncio.sleep(total_seconds)
-        elif (total_seconds > duration):
-            return
+        if (not skip_checks):
+            if (announce == True):
+                await channel.send(f"<@&652326925800570880> {prefix}pp")
+            if (total_seconds > 0 and total_seconds <= duration):
+                print(f"Frogging: {total_seconds}sec remaining")
+                await asyncio.sleep(total_seconds)
+            elif (total_seconds > duration):
+                return
         await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
 
-        now_utc = datetime.utcnow()
         messages = await channel.history(limit=None, before=before, after=after).flatten()
         pps = {}
         for msg in messages:
@@ -971,15 +967,15 @@ class Froligarch(commands.Cog):
         await self.add_froligarchs(guild, list(pps.items())[:2])
 
     async def pping(self):
-        now = datetime.utcnow()
-        target = datetime.combine(now.date(), PP_START)
+        now = datetime.utcnow().replace(tzinfo=timezone.utc)
+        target = datetime.combine(now.date(), PP_START).replace(tzinfo=timezone.utc)
         seconds_until_target = math.ceil((target - now).total_seconds())
         print(f"Seconds until target 1: {seconds_until_target}")
 
         if (seconds_until_target < 0):
             if (seconds_until_target >= -7200):
                 await self.activate_pp()
-            target = datetime.combine(now.date() + timedelta(days=1), PP_START)
+            target = datetime.combine(now.date() + timedelta(days=1), PP_START).replace(tzinfo=timezone.utc)
             seconds_until_target = math.ceil((target - now).total_seconds())
             print(f"Seconds until target 2: {seconds_until_target}")
         # maybe replace 7200 with the difference b/w PP_START and PP_END
@@ -987,7 +983,7 @@ class Froligarch(commands.Cog):
         await self.activate_pp(announce=True)
         while True:
             print(f"Seconds until target 3: {seconds_until_target}")
-            target = datetime.combine(now.date() + timedelta(days=1), PP_START)
+            target = datetime.combine(now.date() + timedelta(days=1), PP_START).replace(tzinfo=timezone.utc)
             seconds_until_target = math.ceil((target - now).total_seconds())
             await asyncio.sleep(seconds_until_target)
             await self.activate_pp(announce=True)
