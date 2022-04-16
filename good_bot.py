@@ -3,17 +3,17 @@ import json
 import os
 import random
 import asyncio
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone
 import math
 import pymongo
 from pymongo import MongoClient
 from pprint import pprint
 import requests
 
-import discord
-from discord.ext import tasks, commands
-from discord.interactions import Interaction
-from discord.ui import button, View, Button
+import nextcord
+from nextcord.ext import tasks, commands
+from nextcord.interactions import Interaction
+from nextcord.ui import button, View, Button
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -34,12 +34,9 @@ token_symbol = "<:ethanger:763411726741143572>"
 coin_symbol = "<:ethoggers:868201785301561394>"
 
 guild = None
-intents = discord.Intents.all()
+intents = nextcord.Intents.all()
 intents.members = True
-
 prefix = "eb!"
-bot = commands.Bot(case_insensitive=True, command_prefix=prefix, intents=intents)
-perms = discord.Permissions()
 
 client = MongoClient(f"mongodb+srv://{USER}:{PWD}@ethanbotdb.jiyrt.mongodb.net/EthanBotDB")
 db=client.bot_data
@@ -61,8 +58,6 @@ class Listeners(commands.Cog):
             f'{bot.user} is connected to the following guild:\n'
             f'{guild.name} (id: {guild.id})\n'
         )
-        froligarch = self.bot.get_cog('Froligarch')
-        await froligarch.pping()
     
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -105,10 +100,10 @@ class Listeners(commands.Cog):
                 if 'parsfuk' in message.content.lower().replace(" ", ""):
                     for x in range(7):
                         await message.channel.send("https://tenor.com/bMkPz.gif")
-                    embed = discord.Embed(title="No, Sam, #parsfuk **WILL NOT** be ***FUCKING LIBERATED***", description="__***DENIED***__")
+                    embed = nextcord.Embed(title="No, Sam, #parsfuk **WILL NOT** be ***FUCKING LIBERATED***", description="__***DENIED***__")
                     await message.channel.send(embed=embed)
             if "fight" in message.content.lower().replace(" ", "") and "continue" in message.content.lower().replace(" ", ""):
-                embed = discord.Embed(title="*Not after I'm done with you*...")
+                embed = nextcord.Embed(title="*Not after I'm done with you*...")
                 await message.channel.send(embed=embed)
                 await asyncio.sleep(2)
                 await message.channel.send(f"**Acquiring location of user {message.author.mention}...**")
@@ -123,7 +118,7 @@ class Ethan(commands.Cog):
 
     @commands.command(name="set")
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def set_balance(self, ctx, currency, member: discord.Member, amount):
+    async def set_balance(self, ctx, currency, member: nextcord.Member, amount):
         economy = self.bot.get_cog('Economy')
         amount = round(float(str(amount).replace(",","")), 2)
         symbol = await economy.get_symbol(currency)
@@ -177,7 +172,7 @@ class Ethan(commands.Cog):
 
     @commands.command(name="edit", aliases=["add"])
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def edit_balance(self, ctx, currency, member: discord.Member, amount):
+    async def edit_balance(self, ctx, currency, member: nextcord.Member, amount):
         economy = self.bot.get_cog('Economy')
         amount = round(float(str(amount).replace(",","")), 2)
         symbol = await economy.get_symbol(currency)
@@ -379,7 +374,7 @@ class Economy(commands.Cog):
             return("<:ethoggers:868201785301561394>")
 
     @commands.command(name="balance", aliases=["bal"])
-    async def view_balance(self, ctx, member: discord.Member = None):
+    async def view_balance(self, ctx, member: nextcord.Member = None):
         if member is None:
             member = ctx.author
         
@@ -393,13 +388,13 @@ class Economy(commands.Cog):
             tokens = f"{existing['tokens']:,.2f}"
             coins = f"{existing['coins']:,.2f}"
 
-        embed = discord.Embed(title=f"{member.name}'s EthanBalance:tm:")
+        embed = nextcord.Embed(title=f"{member.name}'s EthanBalance:tm:")
         embed.add_field(name="<:ethanger:763411726741143572> (ET)", value=tokens, inline=True)        
         embed.add_field(name="<:ethoggers:868201785301561394> (EC)", value=coins, inline=True)
         await ctx.channel.send(embed=embed)
 
     @commands.command(name="pay", aliases=["donate", "give"])
-    async def pay(self, ctx, currency, receiver: discord.Member = None, amount = ""):
+    async def pay(self, ctx, currency, receiver: nextcord.Member = None, amount = ""):
         giver = ctx.author
         types = ["tokens", "coins"]
         symbol = await self.get_symbol(currency)
@@ -478,7 +473,7 @@ class Economy(commands.Cog):
         avg_coins = coins / db_count
 
         description = f"**Members in database: __{db_count}__**\n\n**Tokens:** `{tokens:,.2f}`{token_symbol}\n**Average:** `{avg_tokens:,.2f}`{token_symbol}\n\n**Coins:** `{coins:,.2f}`{coin_symbol}\n**Average:** `{avg_coins:,.2f}`{coin_symbol}"
-        embed = discord.Embed(title=f"__{ctx.guild.name}'s Server Worth__", description=description)
+        embed = nextcord.Embed(title=f"__{ctx.guild.name}'s Server Worth__", description=description)
         await ctx.channel.send(embed=embed)
         
     @commands.command(name="leaderboard", aliases=["top", "rich"])
@@ -516,7 +511,7 @@ class Economy(commands.Cog):
                 count += 1
                 description += f"**#{count}**: `{account['coins']:,.2f}`<:ethoggers:868201785301561394> - {is_user}{account['name']}{is_user}\n"
 
-        embed = discord.Embed(title=f"{ctx.guild.name}'s {currency.capitalize()} Leaderboard", description=description)
+        embed = nextcord.Embed(title=f"{ctx.guild.name}'s {currency.capitalize()} Leaderboard", description=description)
         await ctx.channel.send(embed=embed)
 
     @commands.command(name="inflation", aliases=["rates"])
@@ -530,7 +525,7 @@ class Economy(commands.Cog):
         tokens_rate = rates["tokens_rate"]
         coins_symbol = await self.get_symbol("coins")
         tokens_symbol = await self.get_symbol("tokens")
-        embed = discord.Embed(title=f"__{ctx.guild}'s Inflation Rates:__", description=f"{tokens_symbol}: **{tokens_rate:,.3f}x**\n{coins_symbol}: **{coins_rate:,.3f}x**")
+        embed = nextcord.Embed(title=f"__{ctx.guild}'s Inflation Rates:__", description=f"{tokens_symbol}: **{tokens_rate:,.3f}x**\n{coins_symbol}: **{coins_rate:,.3f}x**")
         await ctx.channel.send(embed=embed)
 
     @commands.command(name="ETHANEDGEPLAY", aliases=["EEP", "EDGEPLAY"])
@@ -541,7 +536,7 @@ class Economy(commands.Cog):
         except ValueError:
             await ctx.channel.send("Bro you gotta give me an integer")
             return
-        time = 30
+        time = 3
         rates = general_info.find_one({"type": "currency"})
         tokens_rate = rates["tokens_rate"]
         coins_rate = rates["coins_rate"]
@@ -594,17 +589,22 @@ class Economy(commands.Cog):
             users = 0
             per_user_stats = {}
 
-            first = datetime.utcnow()
+            first = datetime.now(timezone.utc)
             await asyncio.sleep(time)
 
-            embed = discord.Embed(title="__**STOP**__", description="Tallying love for edge play...")
+            embed = nextcord.Embed(title="__**STOP**__", description="Tallying love for edge play...")
             await ctx.channel.send(embed=embed)
             await asyncio.sleep(1.5)
 
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             messages = await ctx.channel.history(limit=None, before=now, after=first).flatten()
+            messages_more = await ctx.channel.history(limit=10).flatten()
+            print(messages)
+            print(now)
+            print(first)
 
             for msg in messages:
+                print(msg)
                 if (msg.content != "ELEP"):
                     continue
                 id = msg.author.id
@@ -646,7 +646,7 @@ class Economy(commands.Cog):
                     user_earnings += f"**{user}**: **{value}** msgs (**{msg_percent * 100:.2f}**%)"
                 description = f"Token Payout: **{tokens}**{token_symbol}\nCoin Payout: **{coins}**{coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings**__\n{user_earnings}"
 
-            embed = discord.Embed(title="__**Results:**__", description=description)
+            embed = nextcord.Embed(title="__**Results:**__", description=description)
             await ctx.channel.send(embed=embed)
             await asyncio.sleep(2)
 
@@ -668,7 +668,7 @@ class Economy(commands.Cog):
 
             if (stats[0] > msgs):
                 description = f"Original: **{msgs}** msgs, **{users}** users\nNew: **{stats[0]}** msgs, **{stats[1]}** users"
-                embed = discord.Embed(title="**New Record!**", description=description)
+                embed = nextcord.Embed(title="**New Record!**", description=description)
                 await ctx.channel.send(embed=embed)
             else:
                 return
@@ -685,10 +685,11 @@ class Economy(commands.Cog):
             general_info.update_one(query, data)
             
 
-        embed=discord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ELEP' FOR 30 SECONDS", description=f"Goal: {success}\n")
+        embed=nextcord.Embed(title="I LOVE EDGE PLAY. PREPARE TO SEND 'ELEP' FOR 30 SECONDS", description=f"Goal: {success}\n")
         await ctx.channel.send(embed=embed)
         
-        delay = 3
+        # cHANGE BACK TO 3
+        delay = 0
         for x in range(delay):
             await asyncio.sleep(1)
             await ctx.channel.send(str(delay - x))
@@ -734,7 +735,7 @@ class Stocks(commands.Cog):
             date_time = last_update.strftime("%m/%d/%Y %I:%M:%S %p")
             description += f"\n**Data last updated at:** {date_time}"
             
-            embed = discord.Embed(title="Stonks", description=description)
+            embed = nextcord.Embed(title="Stonks", description=description)
             await ctx.channel.send(embed=embed)
 
         async def buy_stocks(ctx):
@@ -793,7 +794,7 @@ class Stocks(commands.Cog):
     @refresh_stocks.before_loop
     async def before_refresh(self):
         # wait until X:00:00
-        now = datetime.utcnow() + timedelta(hours=6)
+        now = datetime.utcnow()
         start = datetime.combine((now + timedelta(hours=1)).date(), time((now + timedelta(hours=1)).time().hour, 0, 0))
         wait_seconds = (start - now).total_seconds()
         print("Waiting " + str(wait_seconds) + " before starting refresh.")
@@ -906,9 +907,11 @@ class Froligarch(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="manualtally")
-    @commands.has_permissions(administrator=True)
-    async def activate_pp(self, ctx=None, announce=False):
+    @commands.Cog.listener()
+    async def on_ready(self):
+        await self.pping()
+
+    async def activate_pp(self, announce=False):
         await bot.wait_until_ready()
         
         guild = bot.get_guild(423583970328838154)
@@ -962,7 +965,7 @@ class Froligarch(commands.Cog):
                 text += f"**{member.name}**: {value} {units}\n"
                 description += text
 
-        embed = discord.Embed(title="LEADERBOARD FOR TODAY", url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
+        embed = nextcord.Embed(title="LEADERBOARD FOR TODAY", url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
         await channel.send(embed=embed)
         await self.remove_froligarchs(guild)
         await self.add_froligarchs(guild, list(pps.items())[:2])
@@ -1010,7 +1013,7 @@ class Froligarch(commands.Cog):
         title = "peepee size machine"
         count = peepee()
         description = f"{ctx.message.author.name}'s penis\n8{('=' * count)}D ({count})"
-        embed=discord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
+        embed=nextcord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
         embed.set_footer(text=f"{ctx.message.author.id}")
         await ctx.send(embed=embed)
 
@@ -1034,7 +1037,7 @@ class Fun(commands.Cog):
 
     @commands.command(name="eliminate", aliases=["elim"])
     @commands.cooldown(1, 30, commands.BucketType.user)
-    async def eliminate(self, ctx, member: discord.Member = None):
+    async def eliminate(self, ctx, member: nextcord.Member = None):
         if (member == None):
             await ctx.channel.send("Hey you little shit I can't eliminate no one")
             return
@@ -1080,12 +1083,22 @@ async def on_command_error(ctx, error):
     else:
         print(error)
 """
+class EthanBot(commands.Bot):
+    def __init__(self, case_insensitive, command_prefix, intents):
+        super().__init__(case_insensitive=case_insensitive, command_prefix=command_prefix, intents=intents)
 
-bot.add_cog(Listeners(bot))
-bot.add_cog(Ethan(bot))
-bot.add_cog(Economy(bot))
-bot.add_cog(Stocks(bot))
-bot.add_cog(Gambling(bot))
-bot.add_cog(Fun(bot))
-bot.add_cog(Froligarch(bot))
+bot = EthanBot(True, prefix, intents)
+
+def setup(bot):
+    bot.add_cog(Listeners(bot))
+    bot.add_cog(Ethan(bot))
+    bot.add_cog(Economy(bot))
+    bot.add_cog(Stocks(bot))
+    bot.add_cog(Gambling(bot))
+    bot.add_cog(Fun(bot))
+    bot.add_cog(Froligarch(bot))
+
+setup(bot)
 bot.run(TOKEN)
+
+
