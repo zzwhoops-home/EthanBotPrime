@@ -684,9 +684,10 @@ class Economy(commands.Cog):
         await ctx.channel.send(embed=embed)
         
         delay = 3
+        first = await ctx.channel.send(f"**READY**")
         for x in range(delay):
             await asyncio.sleep(1)
-            await ctx.channel.send(str(delay - x))
+            await first.edit(f"**{str(delay - x)}**")
 
         await asyncio.sleep(1)
         await ctx.channel.send("**-=-=- GO -=-=-**")
@@ -718,11 +719,12 @@ class Stocks(commands.Cog):
             for stock in stocks:
                 symbol = stock['symbol'].replace('=F', '')
                 name = stock['name']
-                price = stock['price'] * self.tokens_rate
+                price = stock['price']
+                converted_price = price * self.tokens_rate
                 currency = stock['currency']
                 if (currency == 'USX'):
                     price /= 100
-                description += f"({symbol}) **{name}**: `{price:,.2f}`{token_symbol}/unit\n"
+                description += f"({symbol}) **{name}**: `{converted_price:,.2f}`{token_symbol}/unit - ($`{price:,.2f}`)\n"
 
             query = {"type": "stocks"}
             last_update = general_info.find_one(query)['update_time']
@@ -907,7 +909,56 @@ class Froligarch(commands.Cog):
 
     @commands.command(name="manualtally")
     @commands.has_permissions(administrator=True)
-    async def activate_pp(self, skip_checks=False, announce=False):
+    async def manual_pp(self, ctx, days=0):
+        await bot.wait_until_ready()
+        
+        guild = bot.get_guild(423583970328838154)
+        channel = guild.get_channel(866168036770578432)
+        
+        now = datetime.now(timezone.utc)
+        after = datetime.combine(now.date(), PP_START).replace(tzinfo=timezone.utc) - timedelta(days=days)
+        before = datetime.combine(now.date(), PP_END).replace(tzinfo=timezone.utc) - timedelta(days=days)
+
+        await channel.send("**-=-=- Tallying manually because Zach fucked up -=-=-**")
+
+        messages = await channel.history(limit=None, before=before, after=after).flatten()
+        pps = {}
+        for msg in messages:
+            if (msg.author.id != bot.user.id):
+                continue
+            embeds = msg.embeds
+            if embeds == []:
+                continue
+            for embed in embeds:
+                footer = str(embed.footer.text)
+                if (embed.title != "peepee size machine"):
+                    continue
+                if (footer not in pps) or len(pps) == 0:
+                    cur = embed.description.split("\n")
+                    pps[footer] = str(cur[1]).count("=")
+        pps = dict(sorted(pps.items(), key=lambda item: item[1], reverse=True))
+        print(pps)
+        description = ""
+        if len(pps.items()) == 0:
+            description = f"xd yall suck, not even a single pp. Disgracing the Glorious Froligarchy."
+        else:
+            count = 0
+            units = random.choice(["cm", "mm", "m", "in", "ft", "yd"])
+            for key, value in pps.items():
+                count += 1
+                text = f"**({count}).** "
+                if (count <= 2):
+                    text += "<:poggies:826811320073453598> **FROLIGARCH** "
+                member = guild.get_member(int(key))
+                text += f"**{member.name}**: {value} {units}\n"
+                description += text
+
+        embed = nextcord.Embed(title="LEADERBOARD FOR TODAY", url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
+        await channel.send(embed=embed)
+        await self.remove_froligarchs(guild)
+        await self.add_froligarchs(guild, list(pps.items())[:2])
+
+    async def activate_pp(self, announce=False):
         await bot.wait_until_ready()
         
         guild = bot.get_guild(423583970328838154)
@@ -919,14 +970,13 @@ class Froligarch(commands.Cog):
         duration = (before - after).total_seconds()
         total_seconds = (before - now).total_seconds()
 
-        if (not skip_checks):
-            if (announce == True):
-                await channel.send(f"<@&652326925800570880> {prefix}pp")
-            if (total_seconds > 0 and total_seconds <= duration):
-                print(f"Frogging: {total_seconds}sec remaining")
-                await asyncio.sleep(total_seconds)
-            elif (total_seconds > duration):
-                return
+        if (announce == True):
+            await channel.send(f"<@&652326925800570880> {prefix}pp")
+        if (total_seconds > 0 and total_seconds <= duration):
+            print(f"Frogging: {total_seconds}sec remaining")
+            await asyncio.sleep(total_seconds)
+        elif (total_seconds > duration):
+            return
         await channel.send("**-=-=- FROLIGARCHY FOR THE DAY HAS CLOSED. -=-=-**")
 
         messages = await channel.history(limit=None, before=before, after=after).flatten()
@@ -1096,5 +1146,3 @@ def setup(bot):
 
 setup(bot)
 bot.run(TOKEN)
-
-
