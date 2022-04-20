@@ -11,9 +11,10 @@ from pprint import pprint
 import requests
 
 import nextcord
+from nextcord import SelectOption, ButtonStyle
 from nextcord.ext import tasks, commands
-from nextcord.interactions import Interaction
-from nextcord.ui import button, View, Button
+from nextcord.interactions import Interaction, InteractionResponse
+from nextcord.ui import button, View, Button, Select, TextInput, Modal
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -697,6 +698,7 @@ class Economy(commands.Cog):
 
 class Stocks(commands.Cog):
     good_names = ["Crude Oil", "Gold", "Wheat", "Corn", "Ethanol"]
+    symbols = "CL=F,GC=F,ZW=F,ZC=F,CU=F"
     base_rate = 12
     tokens_rate = base_rate
 
@@ -705,7 +707,7 @@ class Stocks(commands.Cog):
         self.refresh_stocks.start()
 
     @commands.command(name="stocks", aliases=["stock", "stonk", "stonks"])
-    @commands.cooldown(1, 1, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def stocks(self, ctx, choice=""):
         async def update_rate():
             self.tokens_rate = self.base_rate * general_info.find_one({"type": "currency"})["tokens_rate"]
@@ -735,7 +737,66 @@ class Stocks(commands.Cog):
             await ctx.channel.send(embed=embed)
 
         async def buy_stocks(ctx):
-            pass
+            options = []
+            stocks = stock_info.find()
+
+            for stock in stocks:
+                name = stock['name']
+                converted_price = stock['price'] * self.tokens_rate
+                currency = stock['currency']
+                if (currency == 'USX'):
+                    converted_price /= 100
+                description = f"{converted_price:,.2f}/unit\n"
+                options.append(SelectOption
+                    (
+                        label = name,
+                        description = description,
+                        emoji = token_symbol
+                    )
+                )
+            select = Select(
+                placeholder = "Select a stock option!",
+                options = options,
+                row = 1
+            )
+
+            @nextcord.ui.select()
+            async def stock_callback(interaction):
+                select.disabled = True
+                
+                name = select.values[0]
+                stock = stock_info.find_one({'name': name})
+                converted_price = stock['price'] * self.tokens_rate
+                if (stock['currency'] == 'USX'):
+                    converted_price /= 100
+                await interaction.response.send_message(f"How many units of **{name}** would you like to purchase? (`{converted_price:,.2f}`{token_symbol}/unit)")
+                
+                def check(m):
+                    return (
+                        m.author == interaction.user
+                        and m.channel == interaction.channel
+                    )
+
+                try:
+                    msg = await self.bot.wait_for(
+                        "message",
+                        timeout=15,
+                        check=check
+                    )
+                    if msg:
+                        try:
+                            await ctx.channel.send(f"Total: {float(msg.content) * converted_price:,.2f}{token_symbol}")
+                        except ValueError:
+                            await ctx.channel.send(f"Hey dumbass you can't buy {msg.content} units of {name}")
+                            return
+                except asyncio.TimeoutError:
+                    await ctx.channel.send("Well give me a number, don't just stare at me like that you creep", delete_after=10)
+                    return
+
+            select.callback = stock_callback
+            view = View()
+            view.add_item(select)
+            await ctx.channel.send(view=view)
 
         if (choice == ""):
             await ctx.channel.send("Bro you gotta tell me what you want to do,\nimagine if you went up to your teacher and\nasked hey, how do you stonks?\nDo you want to 'view', 'buy' or 'sell' your stocks?")
@@ -744,7 +805,7 @@ class Stocks(commands.Cog):
         if (choice == "buy"):
             await buy_stocks(ctx)
 
-    @tasks.loop(hours=1)
+    @tasks.loop(hours=2)
     async def refresh_stocks(self):
         now = datetime.now()
         print("Refreshing stocks at " + str(now))
@@ -757,7 +818,7 @@ class Stocks(commands.Cog):
         general_info.find_one_and_update(query, data, upsert=True)
 
         url = "https://yfapi.net/v6/finance/quote"
-        querystring = {"symbols":"CL=F,GC=F,ZW=F,ZC=F,CU=F"}
+        querystring = {"symbols": self.symbols}
         headers = {
             'x-api-key': STOCKS_API_KEY
             }
@@ -1032,9 +1093,10 @@ class Froligarch(commands.Cog):
         await asyncio.sleep(seconds_until_target)
         await self.activate_pp(announce=True)
         while True:
-            print(f"Seconds until target 3: {seconds_until_target}")
+            now = datetime.utcnow().replace(tzinfo=timezone.utc)
             target = datetime.combine(now.date() + timedelta(days=1), PP_START).replace(tzinfo=timezone.utc)
             seconds_until_target = math.ceil((target - now).total_seconds())
+            print(f"Seconds until target 3: {seconds_until_target}")
             await asyncio.sleep(seconds_until_target)
             await self.activate_pp(announce=True)
 
