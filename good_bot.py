@@ -268,7 +268,7 @@ class Ethan(commands.Cog):
         await ctx.channel.send(f"Okay, I've added **{amount}**{symbol} to **{count}** users. Please be careful Ethan")
 
     @commands.command(name="HYPERINFLATION", aliases=["inflate"])
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 5, commands.BucketType.guild)
     async def hyperinflation(self, ctx, currency = "", multi = 0.0):
         economy = self.bot.get_cog('Economy')
         types = ["tokens", "coins"]
@@ -696,6 +696,63 @@ class Economy(commands.Cog):
         stats = await counter(ctx)
         await record_check(ctx, stats)
 
+class BuyStocks(Select):
+    options = []
+    stocks = stock_info.find()
+    tokens_rate = 0.0
+
+    def __init__(self, tokens_rate):
+        self.tokens_rate = tokens_rate
+
+        for stock in self.stocks:
+            name = stock['name']
+            converted_price = stock['price'] * self.tokens_rate
+            currency = stock['currency']
+            if (currency == 'USX'):
+                converted_price /= 100
+            description = f"{converted_price:,.2f}/unit\n"
+            self.options.append(SelectOption
+                (
+                    label = name,
+                    description = description,
+                    emoji = token_symbol
+                )
+            )
+        super().__init__(
+            placeholder = "Select a stock option!",
+            options = self.options,
+            row = 1
+        )
+
+    async def callback(self, interaction: Interaction):
+        view: BuyStocksView = self.view
+        view.continue_prompt = True
+        view.stop()
+        view.name = self.values[0]
+        view.stock = stock_info.find_one({'name': view.name})
+        view.converted_price = view.stock['price'] * self.tokens_rate
+        if (view.stock['currency'] == 'USX'):
+            view.converted_price /= 100
+        await interaction.response.send_message(f"How many units of **{view.name}** would you like to purchase? (`{view.converted_price:,.2f}`{token_symbol}/unit)")
+
+class BuyStocksView(View):    
+    name = ""
+    stock = ""
+    converted_price = 0.0
+    continue_prompt = False
+
+    def __init__(self, tokens_rate, timeout=30):
+        self.tokens_rate = tokens_rate
+        super().__init__(timeout=timeout)
+
+        self.add_item(BuyStocks(tokens_rate))
+
+    async def on_timeout(self):
+        self.stop()
+
+    async def on_error(self, interaction, select):
+        await interaction.channel.send_message("lmao u suck")
+
 class Stocks(commands.Cog):
     good_names = ["Crude Oil", "Gold", "Wheat", "Corn", "Ethanol"]
     symbols = "CL=F,GC=F,ZW=F,ZC=F,CU=F"
@@ -737,66 +794,32 @@ class Stocks(commands.Cog):
             await ctx.channel.send(embed=embed)
 
         async def buy_stocks(ctx):
-            options = []
-            stocks = stock_info.find()
+            view = BuyStocksView(self.tokens_rate)
+            await ctx.channel.send("**BUYING STOCKS**", view=view)
+            await view.wait()
+            if (not view.continue_prompt):
+                return
 
-            for stock in stocks:
-                name = stock['name']
-                converted_price = stock['price'] * self.tokens_rate
-                currency = stock['currency']
-                if (currency == 'USX'):
-                    converted_price /= 100
-                description = f"{converted_price:,.2f}/unit\n"
-                options.append(SelectOption
-                    (
-                        label = name,
-                        description = description,
-                        emoji = token_symbol
-                    )
+            def check(m):
+                return (
+                    m.author == ctx.author
+                    and m.channel == ctx.channel
                 )
-            select = Select(
-                placeholder = "Select a stock option!",
-                options = options,
-                row = 1
-            )
-
-            @nextcord.ui.select()
-            async def stock_callback(interaction):
-                select.disabled = True
-                
-                name = select.values[0]
-                stock = stock_info.find_one({'name': name})
-                converted_price = stock['price'] * self.tokens_rate
-                if (stock['currency'] == 'USX'):
-                    converted_price /= 100
-                await interaction.response.send_message(f"How many units of **{name}** would you like to purchase? (`{converted_price:,.2f}`{token_symbol}/unit)")
-                
-                def check(m):
-                    return (
-                        m.author == interaction.user
-                        and m.channel == interaction.channel
-                    )
-
-                try:
-                    msg = await self.bot.wait_for(
-                        "message",
-                        timeout=15,
-                        check=check
-                    )
-                    if msg:
-                        try:
-                            await ctx.channel.send(f"Total: {float(msg.content) * converted_price:,.2f}{token_symbol}")
-                        except ValueError:
-                            await ctx.channel.send(f"Hey dumbass you can't buy {msg.content} units of {name}")
-                            return
-                except asyncio.TimeoutError:
-                    await ctx.channel.send("Well give me a number, don't just stare at me like that you creep", delete_after=10)
-                    return
-
-            select.callback = stock_callback
-            view = View()
-            view.add_item(select)
-            await ctx.channel.send(view=view)
+            try:
+                msg = await self.bot.wait_for (
+                    "message",
+                    timeout=15,
+                    check=check
+                )
+                if msg:
+                    try:
+                        await ctx.channel.send(f"Total: {float(msg.content) * view.converted_price:,.2f}{token_symbol}")
+                    except ValueError:
+                        await ctx.channel.send(f"Hey dumbass you can't buy {msg.content} units of {view.name}")
+                        return
+            except asyncio.TimeoutError:
+                await ctx.channel.send("Well give me a number, don't just stare at me like that you creep", delete_after=10)
+                return
 
         if (choice == ""):
             await ctx.channel.send("Bro you gotta tell me what you want to do,\nimagine if you went up to your teacher and\nasked hey, how do you stonks?\nDo you want to 'view', 'buy' or 'sell' your stocks?")
