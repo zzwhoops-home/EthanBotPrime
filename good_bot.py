@@ -43,6 +43,7 @@ client = MongoClient(f"mongodb+srv://{USER}:{PWD}@ethanbotdb.jiyrt.mongodb.net/E
 db=client.bot_data
 
 ethan_tokens = db.ethan_tokens
+user_stocks = db.user_stocks
 general_info = db.general_info
 stock_info = db.stock_info
 
@@ -88,6 +89,8 @@ class Listeners(commands.Cog):
                 await message.channel.send("sex ( ͡° ͜ʖ ͡°)")
             if ':say_that_again:' in msg:
                 await message.channel.send("me and daniel when we see that ethan is naked")
+            if 'cock' in msg:
+                await message.channel.send("https://imgur.com/d7X724S")
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")
@@ -137,7 +140,7 @@ class Ethan(commands.Cog):
         id = member.id
         existing = ethan_tokens.find_one({"id": id})
         if existing == None:
-            await economy.create_account(ctx, member)
+            await economy.create_token_account(ctx, member)
             if (currency == "tokens"):
                 data["tokens"] = amount
             if (currency == "coins"):
@@ -191,7 +194,7 @@ class Ethan(commands.Cog):
         id = member.id
         existing = ethan_tokens.find_one({"id": id})
         if existing == None:
-            await economy.create_account(ctx, member)
+            await economy.create_token_account(ctx, member)
             if (currency == "tokens"):
                 data["tokens"] = amount
             if (currency == "coins"):
@@ -351,7 +354,7 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def create_account(self, ctx, member=None):
+    async def create_token_account(self, ctx, member=None):
         if (member == None):
             member = ctx.author
         tokens = 0.00
@@ -384,7 +387,7 @@ class Economy(commands.Cog):
         tokens = 0.00
         coins = 0.00
         if existing == None:
-            await self.create_account(ctx)
+            await self.create_token_account(ctx)
         else:
             tokens = f"{existing['tokens']:,.2f}"
             coins = f"{existing['coins']:,.2f}"
@@ -426,7 +429,7 @@ class Economy(commands.Cog):
             await ctx.channel.send(f"You need an account and to like... not be broke to pay someone lmao. Try {prefix}bal to create one.")
             return
         if (receiver_existing == None):
-            await self.create_account(ctx, receiver)
+            await self.create_token_account(ctx, receiver)
             receiver_existing = ethan_tokens.find_one({"id": receiver.id})
         
         if (amount == "all"):
@@ -733,7 +736,8 @@ class BuyStocks(Select):
         view.converted_price = view.stock['price'] * self.tokens_rate
         if (view.stock['currency'] == 'USX'):
             view.converted_price /= 100
-        await interaction.response.send_message(f"How many units of **{view.name}** would you like to purchase? (`{view.converted_price:,.2f}`{token_symbol}/unit)")
+        embed = nextcord.Embed(title = f"Buying **{view.name}**:", description = f"How many units would you like to purchase? (Type 'max' for basically your entire balance)\n(`{view.converted_price:,.2f}`{token_symbol}/unit)")
+        await interaction.response.send_message(embed=embed)
 
 class BuyStocksView(View):    
     name = ""
@@ -762,6 +766,20 @@ class Stocks(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.refresh_stocks.start()
+
+    async def create_stock_account(self, ctx, member = None):
+        if (member == None):
+            member = ctx.author
+        await ctx.channel.send(f"No stock account found for {member.mention}. Creating...")
+        data = {
+            "id": member.id,
+            "name": f"{member.name}#{member.discriminator}",
+            "stock_data": {}
+        }
+        print(data)
+        await asyncio.sleep(1)
+        await ctx.channel.send(f"Account created!")
+        user_stocks.insert_one(data)        
 
     @commands.command(name="stocks", aliases=["stock", "stonk", "stonks"])
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -794,6 +812,15 @@ class Stocks(commands.Cog):
             await ctx.channel.send(embed=embed)
 
         async def buy_stocks(ctx):
+            economy = self.bot.get_cog('Economy')
+            member = ctx.author
+
+            query = {"id": ctx.author.id}
+            user = ethan_tokens.find_one(query)
+            if user == None:
+                await economy.create_token_account(ctx, ctx.author)
+            bal = user['tokens']
+
             view = BuyStocksView(self.tokens_rate)
             await ctx.channel.send("**BUYING STOCKS**", view=view)
             await view.wait()
@@ -802,7 +829,7 @@ class Stocks(commands.Cog):
 
             def check(m):
                 return (
-                    m.author == ctx.author
+                    m.author == member
                     and m.channel == ctx.channel
                 )
             try:
@@ -812,22 +839,37 @@ class Stocks(commands.Cog):
                     check=check
                 )
                 if msg:
-                    try:
-                        await ctx.channel.send(f"Total: {float(msg.content) * view.converted_price:,.2f}{token_symbol}")
-                    except ValueError:
-                        await ctx.channel.send(f"Hey dumbass you can't buy {msg.content} units of {view.name}")
-                        return
+                    # take floor to nearest millionth or whatever precision is set to
+                    precision = 0.000001
+                    if (msg.content.lower() == "max"):
+                        amount = (bal / view.converted_price) // precision * precision
+                    else:
+                        try:
+                            amount = float(msg.content)
+                        except ValueError:
+                            await ctx.channel.send(f"Hey dumbass you can't buy {msg.content} units of {view.name}")
+                            return
             except asyncio.TimeoutError:
                 await ctx.channel.send("Well give me a number, don't just stare at me like that you creep", delete_after=10)
                 return
 
-            query = {"id": ctx.author.id}
-            user = ethan_tokens.find_one(query)
-            bal = user['tokens']
-
-
-
+            total_price = amount * view.converted_price
+            # return if the user doesn't have enough money.
+            if (bal < total_price):
+                await ctx.channel.send(f"lmao you don't have enough money fool, you need **{total_price:,.2f}**{token_symbol} to buy **{amount:,.3f}** units of {view.name}")
+                return
+            
+            await ctx.channel.send(f"You have enough money:  -{total_price:,.2f}{token_symbol}")
             # create user stocks collection
+            query = {"id": member.id}
+            cur_stocks = user_stocks.find_one(query)
+            if (cur_stocks == None):
+                await self.create_stock_account(ctx)
+            data = {
+                "name": f"{member.name}#{member.discriminator}",
+                "stock_info": {}
+            }
+            user_stocks.update_one(query, data)
 
         if (choice == ""):
             await ctx.channel.send("Bro you gotta tell me what you want to do,\nimagine if you went up to your teacher and\nasked hey, how do you stonks?\nDo you want to 'view', 'buy' or 'sell' your stocks?")
