@@ -529,7 +529,7 @@ class Economy(commands.Cog):
         embed = nextcord.Embed(title=f"__{ctx.guild}'s Inflation Rates:__", description=f"{tokens_symbol}: **{tokens_rate:,.3f}x**\n{coins_symbol}: **{coins_rate:,.3f}x**")
         await ctx.channel.send(embed=embed)
 
-    @commands.command(name="ETHANEDGEPLAY", aliases=["EEP", "EDGEPLAY"])
+    @commands.command(name="ETHANEDGEPLAY", aliases=["ELEP", "EEP", "EDGEPLAY"])
     @commands.cooldown(1, 45, commands.BucketType.guild)
     async def eth_edge(self, ctx, success="100"):
         try:
@@ -553,8 +553,8 @@ class Economy(commands.Cog):
             return
 
         async def calculate_tokens(users, messages, target, inflation):
-            user_score = math.pow(users * 12, 1.1)
-            message_score = math.pow(messages, 1.2) / 2
+            user_score = math.pow(users * 15, 1.2)
+            message_score = math.pow(messages, 1.3) / 2
             bonus = random.randint(0, messages)
             multiplier = math.pow(target / 50, 0.4)
             total = (user_score + message_score + bonus) * multiplier
@@ -820,6 +820,14 @@ class Stocks(commands.Cog):
             except asyncio.TimeoutError:
                 await ctx.channel.send("Well give me a number, don't just stare at me like that you creep", delete_after=10)
                 return
+
+            query = {"id": ctx.author.id}
+            user = ethan_tokens.find_one(query)
+            bal = user['tokens']
+
+
+
+            # create user stocks collection
 
         if (choice == ""):
             await ctx.channel.send("Bro you gotta tell me what you want to do,\nimagine if you went up to your teacher and\nasked hey, how do you stonks?\nDo you want to 'view', 'buy' or 'sell' your stocks?")
