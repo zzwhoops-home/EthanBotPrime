@@ -91,12 +91,50 @@ class Listeners(commands.Cog):
                 await message.channel.send("me and daniel when we see that ethan is naked")
             if 'cock' in msg:
                 await message.channel.send("https://imgur.com/d7X724S")
+            if 'knowledge' in msg:
+                await message.channel.send("https://www.youtube.com/watch?v=Cv1RJTHf5fk")
+            if 'boris' in msg:
+                await message.channel.send("BORIS JOHNSON")
+            if 'johnson' in msg:
+                await message.channel.send("JOHNSON? BORIS JOHNSON???")
+            if 'putin' in message.content.lower():
+                await message.channel.send("Putin.")
+                await asyncio.sleep(1)
+                await message.channel.send("Putin....")
+                await asyncio.sleep(1)
+                await message.channel.send("PUTIN DEEZ NUTS IN YOUR MOUTH")
+            if 'kenneth' in msg:
+                await message.channel.send("shit")
+            if "nou" in message.content.lower().replace(" ", ""):
+                await message.channel.send("https://i.pinimg.com/originals/d5/8b/67/d58b67b83ffff03e8fd15583c91017fb.png")
+                await message.channel.send("**NO U LMAO**")
+            if "equality" in msg:
+                await message.channel.send("Kenny Calls Commie-nism")
+            if "communism works" in msg:
+                await message.channel.send("Communism works, just ignore the concen....")
+                await asyncio.sleep(2)
+                await message.channel.send("Wait... who is that?")
+                await asyncio.sleep(2)
+                await message.channel.send("OH FUCK LUKE NO GET AWAY FROM ME")
+                await asyncio.sleep(1)
+                await message.channel.send("no what are you doing with that knife")
+                await asyncio.sleep(3)
+                await message.channel.send("OKAY COMMUNISM WORKS COMMUNISM WORKS ITS THE BEST GOVERNMENT SYSTEM THAT HAS EVER BEEN INVENTED")
+            if "died" in msg:
+                await asyncio.sleep(10)
+                times = random.randint(1, 500)
+                await message.channel.send("EGG " * times)
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")
         if (message.author.id == 390601966423900162):
             if 'scribbles notes' in message.content.lower():
                 await message.channel.send("https://tenor.com/bi7Db.gif")
+            msg = message.content.lower().replace(" ", "")
+            if ("invisible hand" in msg):
+                await message.channel.send("Aw fuck you ethan you're not the invisible hand you're a bitch")
+            if ("whim" in msg):
+                await message.channel.send("I'll invert your asshole on a whim dipshit")
         if (message.author.id == 501505695091392527):
             if 'sister' in message.content:
                 await message.channel.send("<:sexualrelations:803707185963991081>")
@@ -115,6 +153,9 @@ class Listeners(commands.Cog):
                 await message.channel.send("**Location found!**")
                 await asyncio.sleep(1)
                 await message.channel.send("https://www.google.com/maps/place/56+Leigh+Ave,+Princeton,+NJ+08540/")
+            if "xd" in message.content.lower().replace(" ", "") or "haha" in message.content.lower().replace(" ", ""):
+                embed = nextcord.Embed(title="Aw fuck you sam go suck a lemon", description="STFU or im taking away your ethan tokens")
+                await message.channel.send(embed=embed)
 
 class Ethan(commands.Cog):
     def __init__(self, bot):
@@ -157,7 +198,7 @@ class Ethan(commands.Cog):
                     "$set":
                     {
                         "name": f"{member.name}#{member.discriminator}",
-                        "coins": new_balance
+                        "tokens": new_balance
                     }
                 }
                 ethan_tokens.update_one(query, data)
@@ -297,10 +338,14 @@ class Ethan(commands.Cog):
             await ctx.channel.send("I mean, okay, sure, but you do realize this changes jackshit right")
             self.hyperinflation.reset_cooldown(ctx)
             return
-        elif (multi > 800813.5):
-            await ctx.channel.send("Stop or I will stab EthanCurrency with a rusty knife before you do")
+        """
+        elif (multi > 1.1):
+            await ctx.channel.send("I have removed the limit!")
+            await asyncio.sleep(20)
+            await ctx.channel.send("AND REPLACED IT WITH 1.1X LMAO GET FUCKED")
             self.hyperinflation.reset_cooldown(ctx)
             return
+        """
 
         data = {
             "$mul":
@@ -733,6 +778,7 @@ class BuyStocks(Select):
         view.stop()
         view.name = self.values[0]
         view.stock = stock_info.find_one({'name': view.name})
+        view.symbol = view.stock['symbol']
         view.converted_price = view.stock['price'] * self.tokens_rate
         if (view.stock['currency'] == 'USX'):
             view.converted_price /= 100
@@ -741,7 +787,8 @@ class BuyStocks(Select):
 
 class BuyStocksView(View):    
     name = ""
-    stock = ""
+    stock = {}
+    symbol = ""
     converted_price = 0.0
     continue_prompt = False
 
@@ -859,15 +906,26 @@ class Stocks(commands.Cog):
                 await ctx.channel.send(f"lmao you don't have enough money fool, you need **{total_price:,.2f}**{token_symbol} to buy **{amount:,.3f}** units of {view.name}")
                 return
             
-            await ctx.channel.send(f"You have enough money:  -{total_price:,.2f}{token_symbol}")
-            # create user stocks collection
+            embed = nextcord.Embed(title=f"Buying **{view.name}** ({view.stock['symbol']})", description=f"**Total**: `{amount:,.3f}`u for **`{total_price:,.2f}`**{token_symbol} (`{view.converted_price:,.2f}`{token_symbol}/unit)")
+            await ctx.channel.send(embed=embed)
+            # create user stocks collection if it doesn't exist, populate with data
             query = {"id": member.id}
             cur_stocks = user_stocks.find_one(query)
             if (cur_stocks == None):
                 await self.create_stock_account(ctx)
             data = {
-                "name": f"{member.name}#{member.discriminator}",
-                "stock_info": {}
+"""
+                "$set": {
+                    "name": f"{member.name}#{member.discriminator}",
+                    "stock_data": {
+                        "name": view.name,
+                        "symbol": view.stock['symbol'],
+                        "amount":
+                        "buy_price":
+                        "buy_worth":
+                    }
+                }
+"""
             }
             user_stocks.update_one(query, data)
 
@@ -1083,6 +1141,8 @@ class Froligarch(commands.Cog):
                 text = f"**({count}).** "
                 if (count <= 2):
                     text += "<:poggies:826811320073453598> **FROLIGARCH** "
+                if (value <= 1):
+                    text += ":pinching_hand: L BOZO "
                 member = guild.get_member(int(key))
                 text += f"**{member.name}**: {value} {units}\n"
                 description += text
@@ -1141,6 +1201,8 @@ class Froligarch(commands.Cog):
                 text = f"**({count}).** "
                 if (count <= 2):
                     text += "<:poggies:826811320073453598> **FROLIGARCH** "
+                if (count >= len(pps.items()) and count < len(pps.items())):
+                    text += "<:pinching_hand:> L BOZO "
                 member = guild.get_member(int(key))
                 text += f"**{member.name}**: {value} {units}\n"
                 description += text
@@ -1193,6 +1255,11 @@ class Froligarch(commands.Cog):
 
         title = "peepee size machine"
         count = peepee()
+        if (ctx.author.id == 546773493543469106):
+            await ctx.channel.send("Permissions: restored. Your punishment has ended.")
+        if (ctx.author.id == 372841965198376963):
+            count = random.randint(0, 7)
+            await ctx.channel.send("You have been cursed with bad luck. The server wishes this upon you lmao. Get fucked.")
         description = f"{ctx.message.author.name}'s penis\n8{('=' * count)}D ({count})"
         embed=nextcord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
         embed.set_footer(text=f"{ctx.message.author.id}")
