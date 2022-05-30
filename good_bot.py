@@ -105,7 +105,7 @@ class Listeners(commands.Cog):
                 await message.channel.send("PUTIN DEEZ NUTS IN YOUR MOUTH")
             if 'kenneth' in msg:
                 await message.channel.send("shit")
-            if "nou" in message.content.lower().replace(" ", ""):
+            if "nou" in message.content.lower().replace(" ", "") and "enough" not in message.content.lower().replace(" ", ""):
                 await message.channel.send("https://i.pinimg.com/originals/d5/8b/67/d58b67b83ffff03e8fd15583c91017fb.png")
                 await message.channel.send("**NO U LMAO**")
             if "equality" in msg:
@@ -136,6 +136,9 @@ class Listeners(commands.Cog):
             if ("whim" in msg):
                 await message.channel.send("I'll invert your asshole on a whim dipshit")
         if (message.author.id == 501505695091392527):
+            num = random.randint(1, 20)
+            if num == 20:
+                await message.channel.send("SAM YOU SHOULD PLAY OSU")
             if 'sister' in message.content:
                 await message.channel.send("<:sexualrelations:803707185963991081>")
             if (message.channel.id == 537757338300317739):
@@ -955,29 +958,33 @@ class Stocks(commands.Cog):
             }
         response = requests.request("GET", url, headers=headers, params=querystring)
 
-        formatted = response.json()['quoteResponse']['result']
+        try:
+            formatted = response.json()['quoteResponse']['result']
+            for good in formatted:
+                symbol = good['symbol']
+                name = good['shortName']
+                currency = good['currency']
+                price = round(good['regularMarketPrice'], 2)
+                
+                for good_name in self.good_names:
+                    if (good_name in name):
+                        name = good_name
+                        break
 
-        for good in formatted:
-            symbol = good['symbol']
-            name = good['shortName']
-            currency = good['currency']
-            price = round(good['regularMarketPrice'], 2)
-            
-            for good_name in self.good_names:
-                if (good_name in name):
-                    name = good_name
-                    break
+                query = {
+                    "symbol": symbol
+                }
+                data = {
+                    "symbol": symbol,
+                    "name": name,
+                    "currency": currency,
+                    "price": price
+                }
+                stock_info.find_one_and_replace(query, data, upsert=True)
+        except KeyError:
+            print("Thingy happened with stonks")
+            return
 
-            query = {
-                "symbol": symbol
-            }
-            data = {
-                "symbol": symbol,
-                "name": name,
-                "currency": currency,
-                "price": price
-            }
-            stock_info.find_one_and_replace(query, data, upsert=True)
 
     @refresh_stocks.before_loop
     async def before_refresh(self):
@@ -1258,8 +1265,11 @@ class Froligarch(commands.Cog):
         if (ctx.author.id == 546773493543469106):
             await ctx.channel.send("Permissions: restored. Your punishment has ended.")
         if (ctx.author.id == 372841965198376963):
-            count = random.randint(0, 7)
-            await ctx.channel.send("You have been cursed with bad luck. The server wishes this upon you lmao. Get fucked.")
+            count = random.randint(0, random.randint(1, 25))
+            await ctx.channel.send("You have been cursed with bad luck.")
+            if (count > 10):
+                await asyncio.sleep(3)
+                await ctx.channel.send("Wait what? Oh well ok.")
         description = f"{ctx.message.author.name}'s penis\n8{('=' * count)}D ({count})"
         embed=nextcord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
         embed.set_footer(text=f"{ctx.message.author.id}")
