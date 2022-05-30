@@ -47,6 +47,11 @@ user_stocks = db.user_stocks
 general_info = db.general_info
 stock_info = db.stock_info
 
+# rant toggles
+# REMEMBER THIS IS ON U TURN IT OFF WHEN IT RESETS
+VIRAJ = True
+SAM = False
+
 class Listeners(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -63,6 +68,16 @@ class Listeners(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message):
+        global SAM
+        global VIRAJ
+
+        num = random.randint(1, 200)
+        if num == 69:
+            guild = message.author.guild
+            role = guild.get_role(829155593322364959)
+            role_members = role.members
+            if message.author not in role_members and message.author.id == 292448459909365760:
+                await message.channel.send(f"{message.author.mention} YOU SHOULD PLAY OSU")
         if (message.content[:5].strip() == prefix):
             return
         if (bot.user.id != message.author.id):
@@ -135,10 +150,19 @@ class Listeners(commands.Cog):
                 await message.channel.send("Aw fuck you ethan you're not the invisible hand you're a bitch")
             if ("whim" in msg):
                 await message.channel.send("I'll invert your asshole on a whim dipshit")
+            # viraj is about to start ranting and ethan would like to stop him
+            if "radical" in msg:
+                VIRAJ = not VIRAJ
+                print(VIRAJ)
+            # sam is about to start saying something stupid and ethan would like to stop him
+            if "boner" in msg:
+                SAM = not SAM
+                print(SAM)
         if (message.author.id == 501505695091392527):
-            num = random.randint(1, 20)
-            if num == 20:
-                await message.channel.send("SAM YOU SHOULD PLAY OSU")
+            if (SAM):
+                chance = random.randint(1, 35)
+                if (chance == 5):
+                    await message.channel.send("https://tenor.com/view/who-asked-gif-21634393")
             if 'sister' in message.content:
                 await message.channel.send("<:sexualrelations:803707185963991081>")
             if (message.channel.id == 537757338300317739):
@@ -159,10 +183,24 @@ class Listeners(commands.Cog):
             if "xd" in message.content.lower().replace(" ", "") or "haha" in message.content.lower().replace(" ", ""):
                 embed = nextcord.Embed(title="Aw fuck you sam go suck a lemon", description="STFU or im taking away your ethan tokens")
                 await message.channel.send(embed=embed)
+        if (message.author.id == 712420717685112863):
+            if (VIRAJ):
+                chance = random.randint(1, 35)
+                if (chance == 5):
+                    await message.channel.send("https://tenor.com/view/who-asked-gif-21634393")
 
 class Ethan(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="ethelp")
+    async def ethan_help(self, ctx):
+        if (ctx.author.id != 390601966423900162):
+            await ctx.channel.send("Only Ethan can use this dumbass")
+            return
+
+        embed = nextcord.Embed(title="**Fun:**", description=f"**Viraj**: {VIRAJ}\n**Sam**: {SAM}")
+        await ctx.author.send(embed=embed)
 
     @commands.command(name="set")
     @commands.cooldown(1, 3, commands.BucketType.user)
@@ -1266,10 +1304,9 @@ class Froligarch(commands.Cog):
             await ctx.channel.send("Permissions: restored. Your punishment has ended.")
         if (ctx.author.id == 372841965198376963):
             count = random.randint(0, random.randint(1, 25))
-            await ctx.channel.send("You have been cursed with bad luck.")
-            if (count > 10):
+            if (count > 14):
                 await asyncio.sleep(3)
-                await ctx.channel.send("Wait what? Oh well ok.")
+                await ctx.channel.send("congor moment")
         description = f"{ctx.message.author.name}'s penis\n8{('=' * count)}D ({count})"
         embed=nextcord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
         embed.set_footer(text=f"{ctx.message.author.id}")
