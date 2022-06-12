@@ -49,7 +49,7 @@ stock_info = db.stock_info
 
 # rant toggles
 # REMEMBER THIS IS ON U TURN IT OFF WHEN IT RESETS
-VIRAJ = True
+VIRAJ = False
 SAM = False
 
 class Listeners(commands.Cog):
@@ -76,7 +76,7 @@ class Listeners(commands.Cog):
             guild = message.author.guild
             role = guild.get_role(829155593322364959)
             role_members = role.members
-            if message.author not in role_members and message.author.id == 292448459909365760:
+            if message.author not in role_members and message.author.id == 501505695091392527:
                 await message.channel.send(f"{message.author.mention} YOU SHOULD PLAY OSU")
         if (message.content[:5].strip() == prefix):
             return
@@ -139,6 +139,8 @@ class Listeners(commands.Cog):
                 await asyncio.sleep(10)
                 times = random.randint(1, 500)
                 await message.channel.send("EGG " * times)
+            if "issue" in msg:
+                await message.channel.send("lmao skill issue")
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")
@@ -153,15 +155,15 @@ class Listeners(commands.Cog):
             # viraj is about to start ranting and ethan would like to stop him
             if "radical" in msg:
                 VIRAJ = not VIRAJ
-                print(VIRAJ)
+                print(f"VIRAJ: {VIRAJ}")
             # sam is about to start saying something stupid and ethan would like to stop him
             if "boner" in msg:
                 SAM = not SAM
-                print(SAM)
+                print(f"SAM: {SAM}")
         if (message.author.id == 501505695091392527):
             if (SAM):
-                chance = random.randint(1, 35)
-                if (chance == 5):
+                chance = random.randint(1, 100)
+                if (chance <= 35):
                     await message.channel.send("https://tenor.com/view/who-asked-gif-21634393")
             if 'sister' in message.content:
                 await message.channel.send("<:sexualrelations:803707185963991081>")
@@ -185,8 +187,8 @@ class Listeners(commands.Cog):
                 await message.channel.send(embed=embed)
         if (message.author.id == 712420717685112863):
             if (VIRAJ):
-                chance = random.randint(1, 35)
-                if (chance == 5):
+                chance = random.randint(1, 100)
+                if (chance <= 35):
                     await message.channel.send("https://tenor.com/view/who-asked-gif-21634393")
 
 class Ethan(commands.Cog):
@@ -195,7 +197,7 @@ class Ethan(commands.Cog):
 
     @commands.command(name="ethelp")
     async def ethan_help(self, ctx):
-        if (ctx.author.id != 390601966423900162):
+        if (ctx.author.id != 390601966423900162 and ctx.author.id != 292448459909365760):
             await ctx.channel.send("Only Ethan can use this dumbass")
             return
 
@@ -1019,8 +1021,8 @@ class Stocks(commands.Cog):
                     "price": price
                 }
                 stock_info.find_one_and_replace(query, data, upsert=True)
-        except KeyError:
-            print("Thingy happened with stonks")
+        except KeyError as e:
+            print(f"Thingy happened with stonks: {e.message}")
             return
 
 
@@ -1303,7 +1305,7 @@ class Froligarch(commands.Cog):
         if (ctx.author.id == 546773493543469106):
             await ctx.channel.send("Permissions: restored. Your punishment has ended.")
         if (ctx.author.id == 372841965198376963):
-            count = random.randint(0, random.randint(1, 25))
+            count = random.randint(0, random.randint(1, 30))
             if (count > 14):
                 await asyncio.sleep(3)
                 await ctx.channel.send("congor moment")
