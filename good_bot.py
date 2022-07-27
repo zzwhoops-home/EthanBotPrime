@@ -1379,6 +1379,25 @@ class Fun(commands.Cog):
         await ctx.channel.send(f"Rolling **d{number}**...")
         await ctx.channel.send(f"You rolled **{roll:,}**.")
 
+    @commands.command(name="rollbetween", aliases=['rb', 'dicebetween', 'db'])
+    async def roll(self, ctx, start_number=str(0), end_number=str(100)):
+        try:
+            if (str(float(start_number)) == start_number):
+                await ctx.channel.send(f"You ever find a {start_number} sided die? Well, no, so give me an integer idiot")
+                return
+            if (str(float(end_number)) == end_number):
+                await ctx.channel.send(f"I can't roll {end_number}, give me an integer dumb dumb")
+                return
+            if (int(start_number) > int(end_number)):
+                await ctx.channel.send(f"Your second number has to be lower than the first bozo. If you don't specify a second number, it defaults to 100.")
+        except ValueError:
+            await ctx.channel.send(f"You like... what... <:are_you_high:847849655990485002> I can't roll letters nincompoop")
+            return
+
+        roll = random.randint(int(start_number), int(end_number))
+        await ctx.channel.send(f"Rolling between **{start_number}** and **{end_number}**...")
+        await ctx.channel.send(f"You rolled **{roll:,}**.")
+
     @commands.command(name="eliminate", aliases=["elim"])
     @commands.cooldown(1, 30, commands.BucketType.user)
     async def eliminate(self, ctx, member: nextcord.Member = None):
