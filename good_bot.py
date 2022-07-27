@@ -80,18 +80,44 @@ class Listeners(commands.Cog):
                 await message.channel.send(f"{message.author.mention} YOU SHOULD PLAY OSU")
         if (message.content[:5].strip() == prefix):
             return
-        if (bot.user.id != message.author.id):
+        if (bot.user.id != message.author.id):                
             msg = message.content.strip().lower()
+            choices_all = ["runfunc", "no sex", "ethan!", "ethan lee!", "my king!", "love ethan lee", "ETHAN LEE!!!!!", ":hot_face:", "STAN ETHAN LEE!", "vote ethan gang", "ethan lee best boy", "ETHAN sdo[f-dsfpasfkhsalduhfluashdf uaudfsa", "wouhaoguhaeg"]
+            choices_ngan = ["sex", "sex??", "sex!"]
             if 'ethan' in msg and message.channel.id != 765710257753948190:
-                await message.channel.send("sex")
+                if message.author.id == 597628340203028485:
+                    await message.channel.send(random.choice(choices_ngan))
+                else:
+                    choice = random.choice(choices_all)
+                    if (choice == "runfunc"):
+                        string = "ethan"
+                        for x in string:
+                            await message.channel.send(f"GIVE ME A {x.capitalize()},")
+                            await asyncio.sleep(0.7)
+                        await message.channel.send(f"ETHAN LEE, ETHAN LEE!")
+                        return
+                    x = random.randint(1, 200)
+                    if (x == 69):
+                        for x in range(24):        
+                            choice = random.choice(choices_all)            
+                            if (choice == "runfunc"):
+                                string = "ethan"
+                                for x in string:
+                                    await message.channel.send(f"GIVE ME A {x.capitalize()},")
+                                    await asyncio.sleep(0.7)
+                                await message.channel.send(f"ETHAN LEE, ETHAN LEE!")
+                                continue
+                            await message.channel.send(choice)
+                    await message.channel.send(choice)
             if 'connor' in msg:
                 await message.channel.send("ethan sex")
             if 'edge' in msg and 'play' in msg:
                 await message.channel.send("ethedge ethplay ethgasm")
             if 'higgy' in msg:
                 await message.channel.send("ethan be gettin' real jiggy")
-            if 'sam' in msg and ('sister' in msg or 'fisher' in msg):
+            if 'sam' in msg and ('sister' in msg or 'your mom' in msg):
                 await message.channel.send("<:sexualrelations:803707185963991081>")
+                await message.channel.send("https://imgur.com/a/WsImVVj")
             if msg == 'ethan\'s insane announcement' and (message.channel.id == 765710257753948190):
                 await message.channel.send("ethan's insane announcement")
             if 'china' in msg:
@@ -120,7 +146,7 @@ class Listeners(commands.Cog):
                 await message.channel.send("PUTIN DEEZ NUTS IN YOUR MOUTH")
             if 'kenneth' in msg:
                 await message.channel.send("shit")
-            if "nou" in message.content.lower().replace(" ", "") and "enough" not in message.content.lower().replace(" ", ""):
+            if "nou" in message.content.lower().replace(" ", "") and "enough" not in message.content.lower().replace(" ", "") and message.channel.id != 765710257753948190:
                 await message.channel.send("https://i.pinimg.com/originals/d5/8b/67/d58b67b83ffff03e8fd15583c91017fb.png")
                 await message.channel.send("**NO U LMAO**")
             if "equality" in msg:
@@ -141,6 +167,15 @@ class Listeners(commands.Cog):
                 await message.channel.send("EGG " * times)
             if "issue" in msg:
                 await message.channel.send("lmao skill issue")
+            if "second amendment" in msg:
+                await message.channel.send("Own a musket for home defense, since that's what the founding fathers intended. Four ruffians break into my house. \"What the devil?\" As I grab my powdered wig and Kentucky rifle. Blow a golf ball sized hole through the first man, he's dead on the spot. Draw my pistol on the second man, miss him entirely because it's smoothbore and nails the neighbors dog. I have to resort to the cannon mounted at the top of the stairs loaded with grape shot, \"Tally ho lads\" the grape shot shreds two men in the blast, the sound and extra shrapnel set off car alarms. Fix bayonet and charge the last terrified rapscallion.He Bleeds out waiting on the police to arrive since triangular bayonet wounds are impossible to stitch up, Just as the founding fathers intended")
+            if "fail" in msg:
+                await message.channel.send("https://imgur.com/315P6Fs")
+            if "based" in msg:
+                await message.channel.send("**BASED AF**")
+                await message.channel.send("https://imgur.com/a/NvSoP4P")
+            if "slave" in msg or "incest" in msg or "secession" in msg:
+                await message.channel.send("https://imgur.com/a/jHxef46")
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")
@@ -154,7 +189,7 @@ class Listeners(commands.Cog):
                 await message.channel.send("I'll invert your asshole on a whim dipshit")
             # viraj is about to start ranting and ethan would like to stop him
             if "radical" in msg:
-                VIRAJ = not VIRAJ
+                VIRAJ = not VIRAJimage.png
                 print(f"VIRAJ: {VIRAJ}")
             # sam is about to start saying something stupid and ethan would like to stop him
             if "boner" in msg:
@@ -163,7 +198,7 @@ class Listeners(commands.Cog):
         if (message.author.id == 501505695091392527):
             if (SAM):
                 chance = random.randint(1, 100)
-                if (chance <= 35):
+                if (chance <= 15):
                     await message.channel.send("https://tenor.com/view/who-asked-gif-21634393")
             if 'sister' in message.content:
                 await message.channel.send("<:sexualrelations:803707185963991081>")
@@ -188,7 +223,7 @@ class Listeners(commands.Cog):
         if (message.author.id == 712420717685112863):
             if (VIRAJ):
                 chance = random.randint(1, 100)
-                if (chance <= 35):
+                if (chance <= 15):
                     await message.channel.send("https://tenor.com/view/who-asked-gif-21634393")
 
 class Ethan(commands.Cog):
@@ -979,7 +1014,7 @@ class Stocks(commands.Cog):
         if (choice == "buy"):
             await buy_stocks(ctx)
 
-    @tasks.loop(hours=2)
+    @tasks.loop(hours=8)
     async def refresh_stocks(self):
         now = datetime.now()
         print("Refreshing stocks at " + str(now))
@@ -1248,7 +1283,7 @@ class Froligarch(commands.Cog):
                 text = f"**({count}).** "
                 if (count <= 2):
                     text += "<:poggies:826811320073453598> **FROLIGARCH** "
-                if (count >= len(pps.items()) and count < len(pps.items())):
+                if (value <= 1):
                     text += "<:pinching_hand:> L BOZO "
                 member = guild.get_member(int(key))
                 text += f"**{member.name}**: {value} {units}\n"
@@ -1298,17 +1333,29 @@ class Froligarch(commands.Cog):
     async def pp(self, ctx):
         def peepee():
             length = random.randint(0, 15)
+            x = random.randint(1, 250)
+            if (x == 69):
+                length = random.randint(15, 3500)
             return length
 
         title = "peepee size machine"
         count = peepee()
-        if (ctx.author.id == 546773493543469106):
-            await ctx.channel.send("Permissions: restored. Your punishment has ended.")
         if (ctx.author.id == 372841965198376963):
             count = random.randint(0, random.randint(1, 30))
             if (count > 14):
                 await asyncio.sleep(3)
                 await ctx.channel.send("congor moment")
+        if (ctx.author.id == 501505695091392527):
+            count = random.randint(0, 20)
+            pass
+        if (ctx.author.id == 597628340203028485):
+            count = -(random.randint(11, 15))
+            await ctx.send("some australia type shit")
+            description = f"{ctx.message.author.name}'s penis\nᗡ{('=' * abs(count))}8 ({count})"
+            embed=nextcord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
+            embed.set_footer(text=f"{ctx.message.author.id}")
+            await ctx.send(embed=embed)
+            return
         description = f"{ctx.message.author.name}'s penis\n8{('=' * count)}D ({count})"
         embed=nextcord.Embed(title=title, url="https://www.youtube.com/watch?v=iik25wqIuFo", description=description)
         embed.set_footer(text=f"{ctx.message.author.id}")
@@ -1370,6 +1417,26 @@ class Fun(commands.Cog):
         text = "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills. I am trained in gorilla warfare and I'm the top sniper in the entire US armed forces. You are nothing to me but just another target. I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words. You think you can get away with saying that shit to me over the Internet? Think again, fucker. As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot. The storm that wipes out the pathetic little thing you call your life. You're fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that's just with my bare hands. Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit. If only you could have known what unholy retribution your little \"clever\" comment was about to bring down upon you, maybe you would have held your fucking tongue. But you couldn't, you didn't, and now you're paying the price, you goddamn idiot. I will shit fury all over you and you will drown in it. You're fucking dead, kiddo."
         await ctx.channel.send(text)
 
+class Zach(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name="exportchannels")
+    async def export_channels(self, ctx):
+        guild = bot.get_guild(423583970328838154)
+        channels = {}
+
+        for x in guild.text_channels:
+            channels[x.name] = x.category
+
+        for x in guild.voice_channels:
+            channels[x.name] = x.category
+
+        with open("channels.txt", "wb") as f:
+            for key, value in channels.items(): 
+                f.write(('%s:%s\n' % (key, value)).encode('utf8'))
+
+
 """
 @bot.event
 async def on_command_error(ctx, error):
@@ -1394,6 +1461,7 @@ def setup(bot):
     bot.add_cog(Gambling(bot))
     bot.add_cog(Fun(bot))
     bot.add_cog(Froligarch(bot))
+    bot.add_cog(Zach(bot))
 
 setup(bot)
 bot.run(TOKEN)
