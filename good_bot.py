@@ -1,5 +1,4 @@
 # bot.py
-import json
 import os
 import random
 import asyncio
@@ -19,6 +18,7 @@ from cogs.Listeners import Listeners
 from cogs.Ethan import Ethan
 from cogs.Economy import Economy
 from cogs.Gambling import Gambling
+from cogs.Fun import Fun
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -27,8 +27,6 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 USER = os.getenv('USER')
 PWD = os.getenv('PWD')
-
-STOCKS_API_KEY = os.getenv("YAHOO_API_KEY")
 
 # pping:
 PP_START = time(20, 00, 00)
@@ -48,6 +46,8 @@ bot = EthanBot(True, prefix, intents)
 # currency symbols:
 bot.token_symbol = "<:ethanger:763411726741143572>"
 bot.coin_symbol = "<:ethoggers:868201785301561394>"
+
+bot.STOCKS_API_KEY = os.getenv("YAHOO_API_KEY")
 
 client = MongoClient(f"mongodb+srv://{USER}:{PWD}@ethanbotdb.jiyrt.mongodb.net/EthanBotDB")
 db=client.bot_data
@@ -95,7 +95,7 @@ class BuyStocks(Select):
         view.converted_price = view.stock['price'] * self.tokens_rate
         if (view.stock['currency'] == 'USX'):
             view.converted_price /= 100
-        embed = nextcord.Embed(title = f"Buying **{view.name}**:", description = f"How many units would you like to purchase? (Type 'max' for basically your entire balance)\n(`{view.converted_price:,.2f}`{self.bot.token_symbol}/unit)")
+        embed = nextcord.Embed(title = f"Buying **{view.name}**:", description = f"How many units would you like to purchase? (Type 'max' for basically your entire balance)\n(`{view.converted_price:,.2f}`{bot.token_symbol}/unit)")
         await interaction.response.send_message(embed=embed)
 
 class BuyStocksView(View):    
@@ -150,25 +150,53 @@ class Stocks(commands.Cog):
         async def view_stocks(ctx):
             await update_rate()
 
-            stocks = bot.stock_info.find()
+            stocks = list(bot.stock_info.find())
+
+            query = {
+                "id": ctx.author.id
+            }
+            user_stocks = bot.user_stocks.find_one(query)
+            if (user_stocks == None):
+                await self.create_stock_account(ctx)
+                stock_data = {}
+            else:
+                stock_data = user_stocks["stock_data"]
 
             description = f"**Conversion Rate**: `{self.tokens_rate:,.2f}`{self.bot.token_symbol}/USD\n\n"
+
             for stock in stocks:
                 symbol = stock['symbol'].replace('=F', '')
                 name = stock['name']
                 price = stock['price']
-                converted_price = price * self.tokens_rate
                 currency = stock['currency']
                 if (currency == 'USX'):
                     price /= 100
-                description += f"({symbol}) **{name}**: `{converted_price:,.2f}`{self.bot.token_symbol}/unit - ($`{price:,.2f}`)\n"
+                converted_price = price * self.tokens_rate
+                description += f"({symbol}) **{name}**: `{converted_price:,.2f}`{self.bot.token_symbol}/**unit** - ($`{price:,.2f}`)\n"
 
             query = {"type": "stocks"}
             last_update = bot.general_info.find_one(query)['update_time']
             date_time = last_update.strftime("%m/%d/%Y %I:%M:%S %p")
-            description += f"\n**Data last updated at:** {date_time}"
-            
-            embed = nextcord.Embed(title="Stonks", description=description)
+            description += f"\n**Data last updated at:** {date_time}\n\n**Stock Inventory:**"
+
+            print(stock_data)
+            if (stock_data == {}):
+                description += f"\n`You haven't bought any shares.`"
+            else:
+                for stock in stocks:
+                    name = stock['name']
+                    price = stock['price']
+                    currency = stock['currency']
+                    if (currency == 'USX'):
+                        price /= 100
+
+                    if (name in stock_data.keys() and float(stock_data[name]) != 0.0):
+                        shares = stock_data[name]
+                        total_value_usd = shares * price
+                        total_value_tokens = total_value_usd * self.tokens_rate
+                        description += f"\n**{name}**: `{shares:,.3f}`**u** worth `{total_value_tokens:,.2f}`{bot.token_symbol} ($`{total_value_usd:,.2f}`)"
+
+            embed = nextcord.Embed(title=f"{ctx.author.name}'s Stonks", description=description)
             await ctx.channel.send(embed=embed)
 
         async def buy_stocks(ctx):
@@ -180,6 +208,10 @@ class Stocks(commands.Cog):
             if user == None:
                 await economy.create_token_account(ctx, ctx.author)
             bal = user['tokens']
+
+            if (bal == 0):
+                await ctx.channel.send(f"{ctx.author.mention} Get outta here, broke ass. You need {self.bot.token_symbol} to purchase stocks.")
+                return
 
             view = BuyStocksView(self.tokens_rate)
             await ctx.channel.send("**BUYING STOCKS**", view=view)
@@ -216,31 +248,47 @@ class Stocks(commands.Cog):
             total_price = amount * view.converted_price
             # return if the user doesn't have enough money.
             if (bal < total_price):
-                await ctx.channel.send(f"lmao you don't have enough money fool, you need **{total_price:,.2f}**{self.bot.token_symbol} to buy **{amount:,.3f}** units of {view.name}")
+                await ctx.channel.send(f"lmao you don't have enough money fool, you need **{total_price:,.2f}**{bot.token_symbol} to buy **{amount:,.3f}** units of {view.name}")
                 return
+            new_balance = bal - total_price
             
-            embed = nextcord.Embed(title=f"Buying **{view.name}** ({view.stock['symbol']})", description=f"**Total**: `{amount:,.3f}`u for **`{total_price:,.2f}`**{self.bot.token_symbol} (`{view.converted_price:,.2f}`{self.bot.token_symbol}/unit)")
-            await ctx.channel.send(embed=embed)
             # create user stocks collection if it doesn't exist, populate with data
-            query = {"id": member.id}
-            cur_stocks = bot.user_stocks.find_one(query)
-            if (cur_stocks == None):
+            query = {
+                "id": member.id  
+            }
+            user = bot.user_stocks.find_one(query)
+            if (user == None):
                 await self.create_stock_account(ctx)
+                new_stocks = {}
+            else:
+                # two variables in case we want to show the user how many shares they had previously
+                cur_stocks = user["stock_data"]
+                new_stocks = cur_stocks
+
+            if (view.name not in new_stocks.keys() or float(new_stocks[view.name]) == 0.0):
+                new_stocks[view.name] = amount
+            else:
+                new_stocks[view.name] += amount
+
             data = {
-"""
                 "$set": {
                     "name": f"{member.name}#{member.discriminator}",
-                    "stock_data": {
-                        "name": view.name,
-                        "symbol": view.stock['symbol'],
-                        "amount":
-                        "buy_price":
-                        "buy_worth":
-                    }
+                    "stock_data": new_stocks
                 }
-"""
             }
             bot.user_stocks.update_one(query, data)
+
+            # withdraw from user balance
+            data = {
+                "$set": {
+                    "tokens": new_balance
+                }
+            }
+            bot.ethan_tokens.update_one(query, data)
+
+            embed = nextcord.Embed(title=f"Purchased **{view.name}** ({view.stock['symbol']})", description=f"**Total**: `{amount:,.3f}`u for **`{total_price:,.2f}`**{bot.token_symbol} (`{view.converted_price:,.2f}`{bot.token_symbol}/unit)\n**You now have: `{new_balance:,.2f}`**{bot.token_symbol}")
+            await ctx.channel.send(embed=embed)
+            return
 
         if (choice == ""):
             await ctx.channel.send("Bro you gotta tell me what you want to do,\nimagine if you went up to your teacher and\nasked hey, how do you stonks?\nDo you want to 'view', 'buy' or 'sell' your stocks?")
@@ -264,7 +312,7 @@ class Stocks(commands.Cog):
         url = "https://yfapi.net/v6/finance/quote"
         querystring = {"symbols": self.symbols}
         headers = {
-            'x-api-key': STOCKS_API_KEY
+            'x-api-key': bot.STOCKS_API_KEY
             }
         response = requests.request("GET", url, headers=headers, params=querystring)
 
@@ -499,81 +547,6 @@ class Froligarch(commands.Cog):
         embed.set_footer(text=f"{ctx.message.author.id}")
         await ctx.send(embed=embed)
 
-class Fun(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(name="roll", aliases=['dice', 'r'])
-    async def roll(self, ctx, number=str(100)):
-        try:
-            if (str(float(number)) == number):
-                await ctx.channel.send(f"You ever find a {number} sided die? Well, no, so give me an integer idiot")
-                return
-        except ValueError:
-            await ctx.channel.send(f"You like... what... <:are_you_high:847849655990485002> I can't roll letters nincompoop")
-            return
-
-        roll = random.randint(0, int(number))
-        await ctx.channel.send(f"Rolling **d{number}**...")
-        await ctx.channel.send(f"You rolled **{roll:,}**.")
-
-    @commands.command(name="rollbetween", aliases=['rb', 'dicebetween', 'db'])
-    async def roll_between(self, ctx, start_number=str(0), end_number=str(100)):
-        try:
-            if (str(float(start_number)) == start_number):
-                await ctx.channel.send(f"You ever find a {start_number} sided die? Well, no, so give me an integer idiot")
-                return
-            if (str(float(end_number)) == end_number):
-                await ctx.channel.send(f"I can't roll {end_number}, give me an integer dumb dumb")
-                return
-            if (int(start_number) > int(end_number)):
-                await ctx.channel.send(f"Your second number has to be lower than the first bozo. If you don't specify a second number, it defaults to 100.")
-        except ValueError:
-            await ctx.channel.send(f"You like... what... <:are_you_high:847849655990485002> I can't roll letters nincompoop")
-            return
-
-        roll = random.randint(int(start_number), int(end_number))
-        await ctx.channel.send(f"Rolling between **{start_number}** and **{end_number}**...")
-        await ctx.channel.send(f"You rolled **{roll:,}**.")
-
-    @commands.command(name="eliminate", aliases=["elim"])
-    @commands.cooldown(1, 30, commands.BucketType.user)
-    async def eliminate(self, ctx, member: nextcord.Member = None):
-        if (member == None):
-            await ctx.channel.send("Hey you little shit I can't eliminate no one")
-            return
-        if (member.guild_permissions.administrator):
-            await ctx.channel.send("https://i.pinimg.com/originals/0f/fd/29/0ffd29da68cc8176440779fcdb5b87bb.jpg")
-            self.eliminate.reset_cooldown(ctx)
-            return
-        nick = member.display_name
-        await ctx.channel.send(f'{member.mention} is a lil shit')
-        await asyncio.sleep(1)
-        await ctx.channel.send('lmao L get eliminated')
-        await member.edit(nick="Eliminated")
-        await asyncio.sleep(9)
-        await ctx.channel.send('oh wait nvm, zzwhoops told me odro days are over.')
-        await asyncio.sleep(3)
-        await ctx.channel.send('sorry!')
-        await asyncio.sleep(1)
-        await member.edit(nick=nick)
-
-        await ctx.message.delete()
-
-    @commands.command(name="randomword", aliases=["random", "rword"])
-    @commands.cooldown(1, 2, commands.BucketType.user)
-    async def random_word(self, ctx):
-        req = requests.get("https://random-word-api.herokuapp.com/word?number=1")
-        words = json.loads(req.text)
-        word = random.choice(words)
-        await ctx.channel.send(f"Your word is: {word}")
-
-    @commands.command(name="wtf")
-    @commands.cooldown(1, 25, commands.BucketType.user)
-    async def navy_seal(self, ctx):
-        text = "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills. I am trained in gorilla warfare and I'm the top sniper in the entire US armed forces. You are nothing to me but just another target. I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words. You think you can get away with saying that shit to me over the Internet? Think again, fucker. As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot. The storm that wipes out the pathetic little thing you call your life. You're fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that's just with my bare hands. Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit. If only you could have known what unholy retribution your little \"clever\" comment was about to bring down upon you, maybe you would have held your fucking tongue. But you couldn't, you didn't, and now you're paying the price, you goddamn idiot. I will shit fury all over you and you will drown in it. You're fucking dead, kiddo."
-        await ctx.channel.send(text)
-
 class Zach(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -594,14 +567,14 @@ class Zach(commands.Cog):
                 f.write(('%s:%s\n' % (key, value)).encode('utf8'))
 
 
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
-    if isinstance(error, commands.errors.CommandInvokeError):
-        await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
-    else:
-        print(error)
+# @bot.event
+# async def on_command_error(ctx, error):
+#     if isinstance(error, commands.CommandOnCooldown):
+#         await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
+#     if isinstance(error, commands.errors.CommandInvokeError):
+#         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
+#     else:
+#         print(error)
 
 def setup(bot):
     bot.add_cog(Listeners(bot))

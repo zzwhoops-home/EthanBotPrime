@@ -1,3 +1,4 @@
+import re
 import nextcord
 from nextcord.ext import tasks, commands
 import random
@@ -31,36 +32,21 @@ class Listeners(commands.Cog):
             role_members = role.members
             if message.author not in role_members and message.author.id == 501505695091392527:
                 await message.channel.send(f"{message.author.mention} YOU SHOULD PLAY OSU")
+        # if (len(message.content) > 350):
+        #     await message.channel.send(f"{message.author.mention} HEY TL;DR! THAT MESSAGE WAS {len(message.content)} characters!")
         if (message.content[:5].strip() == prefix):
             return
         if (self.bot.user.id != message.author.id):                
             msg = message.content.strip().lower()
-            choices_all = ["runfunc", "no sex", "ethan!", "ethan lee!", "my king!", "love ethan lee", "ETHAN LEE!!!!!", ":hot_face:", "STAN ETHAN LEE!", "vote ethan gang", "ethan lee best boy", "ETHAN sdo[f-dsfpasfkhsalduhfluashdf uaudfsa", "wouhaoguhaeg"]
-            choices_ngan = ["sex", "sex??", "sex!"]
+            choices_all = ["no sex", "ethan!", "ethan lee!", "my king!", "love ethan lee", "ETHAN LEE!!!!!", ":hot_face:", "STAN ETHAN LEE!", "vote ethan gang", "ethan lee best boy", "ETHAN sdo[f-dsfpasfkhsalduhfluashdf uaudfsa", "wouhaoguhaeg"]
             if 'ethan' in msg and message.channel.id != 765710257753948190:
-                if message.author.id == 597628340203028485:
-                    await message.channel.send(random.choice(choices_ngan))
+                x = random.randint(1, 200)
+                if (x == 69):
+                    for x in range(25):
+                        choice = random.choice(choices_all)
+                        await message.channel.send(choice)
                 else:
                     choice = random.choice(choices_all)
-                    if (choice == "runfunc"):
-                        string = "ethan"
-                        for x in string:
-                            await message.channel.send(f"GIVE ME A {x.capitalize()},")
-                            await asyncio.sleep(0.7)
-                        await message.channel.send(f"ETHAN LEE, ETHAN LEE!")
-                        return
-                    x = random.randint(1, 200)
-                    if (x == 69):
-                        for x in range(24):        
-                            choice = random.choice(choices_all)            
-                            if (choice == "runfunc"):
-                                string = "ethan"
-                                for x in string:
-                                    await message.channel.send(f"GIVE ME A {x.capitalize()},")
-                                    await asyncio.sleep(0.7)
-                                await message.channel.send(f"ETHAN LEE, ETHAN LEE!")
-                                continue
-                            await message.channel.send(choice)
                     await message.channel.send(choice)
             if 'connor' in msg:
                 await message.channel.send("ethan sex")
@@ -98,8 +84,7 @@ class Listeners(commands.Cog):
             if 'kenneth' in msg:
                 await message.channel.send("shit")
             if "nou" in message.content.lower().replace(" ", "") and "enough" not in message.content.lower().replace(" ", "") and message.channel.id != 765710257753948190:
-                await message.channel.send("https://i.pinimg.com/originals/d5/8b/67/d58b67b83ffff03e8fd15583c91017fb.png")
-                await message.channel.send("**NO U LMAO**")
+                await message.channel.send("no u lmao")
             if "equality" in msg:
                 await message.channel.send("Kenny Calls Commie-nism")
             if "communism works" in msg:
@@ -114,7 +99,7 @@ class Listeners(commands.Cog):
                 await message.channel.send("OKAY COMMUNISM WORKS COMMUNISM WORKS ITS THE BEST GOVERNMENT SYSTEM THAT HAS EVER BEEN INVENTED")
             if "died" in msg:
                 await asyncio.sleep(10)
-                times = random.randint(1, 500)
+                times = random.randint(1, 200)
                 await message.channel.send("EGG " * times)
             if "issue" in msg:
                 await message.channel.send("lmao skill issue")
@@ -134,6 +119,29 @@ class Listeners(commands.Cog):
                 await message.delete()
             if "gold plated pocket watch" in msg and "diamond encrusted monocle" in msg:
                 await message.channel.send(f"Hey {message.author.mention}, fuck you rich kid!")
+            if "vaporeon" in msg:
+                text = "Hey guys, did you know that in terms of male human and female Pokémon breeding, Vaporeon is the most compatible Pokémon for humans? Not only are they in the field egg group, which is mostly comprised of mammals, Vaporeon are an average of 3”03’ tall and 63.9 pounds, this means they’re large enough to be able handle human dicks, and with their impressive Base Stats for HP and access to Acid Armor, you can be rough with one. Due to their mostly water based biology, there’s no doubt in my mind that an aroused Vaporeon would be incredibly wet, so wet that you could easily have sex with one for hours without getting sore. They can also learn the moves Attract, Baby-Doll Eyes, Captivate, Charm, and Tail Whip, along with not having fur to hide nipples, so it’d be incredibly easy for one to get you in the mood. With their abilities Water Absorb and Hydration, they can easily recover from fatigue with enough water. No other Pokémon comes close to this level of compatibility. Also, fun fact, if you pull out enough, you can make your Vaporeon turn white. Vaporeon is literally built for human dick. Ungodly defense stat+high HP pool+Acid Armor means it can take cock all day, all shapes and sizes and still come for more"
+                await message.channel.send(text)
+            if "copium" in msg or "cope" in msg or "coping" in msg:
+                await message.channel.send("https://pbs.twimg.com/media/FLTYc2FaUAAPzHp.jpg")
+            if "chmiel" in msg:
+                text = "huge ass, pumped full of blood, biceps... Not ass i meant biceps, just like the largest fucking biceps on earth... And its no longer a 2-split, no, it's fucking 4-split quadceps but for the arm just absolutely vascular"
+                await message.channel.send(text)
+            if "sound" in msg:
+                text = "To the people who don’t know, sounding is a community where people are obsessed with random sounds. They are sort of like audiophiles in a way, but are known colloquially as “soundphiles”. I used to be apart of this community, it was fun, getting to learn about the noises around us. If you like “sounds” come and join the fellow “sounders” down at r/sounding"
+                await message.channel.send(text)
+            if re.search("\\b69\\b", message.content) is not None:
+                text = "continual reorganization of the inner human body to surgically attatch the ending of the large intestine to the opening of the mouth, and then modifying the other ending of the large intestine to not point towards the rectum, but rather cross stitched towards the sexual organ of whatever subject is being performed upon"
+                await message.channel.send(text)
+            if "what the fuck" in msg:
+                await message.channel.send("https://i.imgur.com/JeJQLMk.png")
+            if "essential oils" in msg or "mlm" in msg:
+                await message.channel.send("epic tessaro moment")
+            if "cbt" in msg or "cock and ball torture" in msg:
+                text = "Cognitive behavioral therapy (CBT) is a psycho-social intervention[1][2] that aims to reduce symptoms of various mental health conditions, primarily depression and anxiety disorders.[3] CBT focuses on challenging and changing cognitive distortions (such as thoughts, beliefs, and attitudes) and their associated behaviors to improve emotional regulation[2][4] and develop personal coping strategies that target solving current problems. Though it was originally designed to treat depression, its uses have been expanded to include the treatment of many mental health conditions, including anxiety,[5][6] substance use disorders, marital problems, and eating disorders.[7][8][9] CBT includes a number of cognitive or behavioral psychotherapies that treat defined psychopathologies using evidence-based techniques and strategies.[10][11][12]"
+                await message.channel.send(text)
+            if "turkey" in msg or "thanksgiving" in msg:
+                await message.channel.send("https://i.imgur.com/IoWKuXR.png")
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")

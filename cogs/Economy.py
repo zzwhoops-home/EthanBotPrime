@@ -13,11 +13,9 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def create_token_account(self, ctx, member=None):
+    async def create_token_account(self, ctx, member=None, tokens=0.00, coins=0.00):
         if (member == None):
             member = ctx.author
-        tokens = 0.00
-        coins = 0.00
         await ctx.channel.send(f"Records not found... creating account for {member.mention}.")
         data = {
             "id": member.id,
@@ -46,7 +44,7 @@ class Economy(commands.Cog):
         tokens = 0.00
         coins = 0.00
         if existing == None:
-            await self.create_token_account(ctx)
+            await self.create_token_account(ctx, member)
         else:
             tokens = f"{existing['tokens']:,.2f}"
             coins = f"{existing['coins']:,.2f}"
@@ -152,7 +150,7 @@ class Economy(commands.Cog):
         description = ""
         count = 0
         if currency == "tokens":
-            accounts = self.bot.ethan_tokens.find().sort("tokens", pymongo.DESCENDING).limit(7)
+            accounts = self.bot.ethan_tokens.find().sort("tokens", pymongo.DESCENDING).limit(20)
             for account in accounts:
                 print(account)
                 if (account['name'] == f"{member.name}#{member.discriminator}"):
@@ -164,7 +162,7 @@ class Economy(commands.Cog):
                 count += 1
                 description += f"**#{count}**: `{account['tokens']:,.2f}`<:ethanger:763411726741143572> - {is_user}{account['name']}{is_user}\n"
         elif currency == "coins":
-            accounts = self.bot.ethan_tokens.find().sort("coins", pymongo.DESCENDING).limit(7)
+            accounts = self.bot.ethan_tokens.find().sort("coins", pymongo.DESCENDING).limit(20)
             for account in accounts:
                 if (account['name'] == f"{member.name}#{member.discriminator}"):
                     is_user = "***"
@@ -317,7 +315,7 @@ class Economy(commands.Cog):
                 tokens = 0
                 coins = 0            
                 for key, value in per_user_stats.items():
-                    user = self.bot.get_user(key).name
+                    user = self.bot.get_user(key)
                     user_name = user.name
                     msg_percent = value / count
                     user_earnings += f"**{user_name}**: **{value}** msgs (**{msg_percent * 100:.2f}**%)"
@@ -381,8 +379,7 @@ class Economy(commands.Cog):
         stats = await counter(ctx, START_TIME, END_TIME)
         await record_check(ctx, stats)
 
-    @commands.command(name="FREETOKENS")
-    @commands.cooldown(5, 10, commands.BucketType.user)
+    @commands.command(name="FREETOKENS", aliases=["beg", "mooch"])
     async def free_tokens(self, ctx):
         query = {
             "type": "currency"
@@ -391,17 +388,20 @@ class Economy(commands.Cog):
         # coins_rate = rates["coins_rate"]
         tokens_rate = rates["tokens_rate"]
 
-        choice = random.randint(1, 4)
+        choice = random.randint(1, 3)
         if (choice == 1):
-            base_amount = random.randint(50, 100) / 10
+            base_amount = random.randint(20, 45) / 10
             amount = tokens_rate * base_amount
             
             id = ctx.author.id
             existing = self.bot.ethan_tokens.find_one({"id": id})
-            existing_tokens = existing["tokens"]
-            new_tokens = existing_tokens + amount
             if existing == None:
                 await self.create_token_account(ctx)
+                existing_tokens = 0
+            else:
+                existing_tokens = existing["tokens"]
+
+            new_tokens = existing_tokens + amount
 
             query = {
                 "id": id
