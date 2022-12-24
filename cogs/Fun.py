@@ -3,6 +3,7 @@ import nextcord
 from nextcord.ext import tasks, commands
 
 import random
+import datetime
 import asyncio
 import requests
 import json
@@ -126,3 +127,65 @@ class Fun(commands.Cog):
         else:
             await ctx.channel.send(f"{member} {random.choice(responses)}")
 
+    @commands.command(name="andify", aliases=["andy", "andeth"])
+    async def andify(self, ctx, message: str, andethpower):
+        try:
+            andethpower = int(andethpower)
+        except TypeError:
+            await ctx.channel.send("Enter a number from 1 to 10 idiot")
+            return 
+        if (andethpower > 10 or andethpower < 1):
+            await ctx.channel.send("Give me a power level between 1 and 10, dumbass")
+            return
+
+        words = message.split(" ")
+        for x in range(len(words)):
+            andeth = random.randint(1, 10)
+            if andeth <= andethpower:
+                words[x] = f"like {words[x]}"
+        
+        string = ""
+        for word in words:
+            string += f"{word} "
+
+        await ctx.channel.send(string)
+
+    @commands.command(name="unandify", aliases=["unandy", "unandeth"])
+    async def unandify(self, ctx, message: str):
+        words = message.split(" ")
+
+        for x in range(len(words)):
+            if words[x].lower() == "like":
+                words[x] = f""
+        
+        string = " ".join([word for word in words if word])
+
+        await ctx.channel.send(string)
+
+    @commands.command(name="graduation", aliases=["GRADWHEN", "WHENGRAD", "grad"])
+    async def graduation(self, ctx):
+        now = datetime.datetime.now()
+        graduation = datetime.datetime(2023, 6, 15, 12, 30, 00)
+
+        duration = graduation - now
+
+        seconds = duration.total_seconds()
+
+        days, remainder = divmod(seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        description = f"**{days:.0f}** days, **{hours:.0f}** hours, **{minutes:.0f}** minutes, **{seconds:.0f}** seconds until graduation!!!\n"
+
+        seconds = duration.total_seconds()
+
+        weeks = seconds / 604800
+        days = seconds / 86400
+        hours = seconds / 3600
+        minutes = seconds / 60
+
+        title = "Countdown until graduation:"
+        description += f"\n__**That is:**__\n\n**{weeks:,.2f}** weeks\n**{days:,.2f}** days\n**{hours:,.2f}** hours\n**{minutes:,.0f}** minutes\n**{seconds:,.0f}** seconds"
+
+        embed = nextcord.Embed(title=title, description=description)
+
+        await ctx.channel.send(embed=embed)

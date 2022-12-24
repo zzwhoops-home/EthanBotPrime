@@ -63,7 +63,7 @@ class Gambling(commands.Cog):
             await ctx.channel.send(f"{ctx.author.mention} The number was **{number}**. Your guess, **{guess}** was **{difference}** off.")
 
             if (difference == 0):
-                percent = random.randint(175, 300)
+                percent = random.randint(250, 600)
                 change = amount * (percent / 100)
                 await ctx.channel.send("https://ih1.redbubble.net/image.724682828.9041/flat,1000x1000,075,f.jpg")
                 await ctx.channel.send(f"{ctx.author.mention} Spot on! Congratulations, you've won **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")

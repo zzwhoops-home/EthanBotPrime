@@ -29,8 +29,8 @@ USER = os.getenv('USER')
 PWD = os.getenv('PWD')
 
 # pping:
-PP_START = time(20, 00, 00)
-PP_END = time(22, 00, 00)
+PP_START = time(21, 00, 00)
+PP_END = time(23, 00, 00)
 
 guild = None
 intents = nextcord.Intents.all()

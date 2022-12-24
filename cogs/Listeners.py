@@ -142,6 +142,18 @@ class Listeners(commands.Cog):
                 await message.channel.send(text)
             if "turkey" in msg or "thanksgiving" in msg:
                 await message.channel.send("https://i.imgur.com/IoWKuXR.png")
+            if "40 clearview avenue" in msg:
+                await message.channel.send("come for a good time")
+            if "clearview" in msg:
+                await message.channel.send("did i hear... clearview?")
+                await asyncio.sleep(1)
+                await message.channel.send("as in 40 clearview avenue???")
+                await asyncio.sleep(2)
+                await message.channel.send("come for a good time!!!")
+                await asyncio.sleep(1)
+            if "steve" in msg:
+                text = "Anyone and everyone had become my target. Frenzy has overtaken me and I simply am now tethering on the edge--there is no escape, not even death. No blissful end shall greet me; only the sight of my deeds will bore into my soul."
+                await message.channel.send(text)
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")
