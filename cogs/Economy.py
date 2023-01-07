@@ -46,8 +46,8 @@ class Economy(commands.Cog):
         if existing == None:
             await self.create_token_account(ctx, member)
         else:
-            tokens = f"{existing['tokens']:,.2f}"
-            coins = f"{existing['coins']:,.2f}"
+            tokens = f"{existing['tokens']:,.4g}"
+            coins = f"{existing['coins']:,.4g}"
 
         embed = nextcord.Embed(title=f"{member.name}'s EthanBalance:tm:")
         embed.add_field(name="<:ethanger:763411726741143572> (ET)", value=tokens, inline=True)        
@@ -113,7 +113,7 @@ class Economy(commands.Cog):
         self.bot.ethan_tokens.update_one({"id": receiver.id}, receive_data)
 
         # maybe replace with another database call to make sure everything is consistent?
-        await ctx.channel.send(f"You gave **{amount:,.2f}**{symbol} to {receiver.mention}.\nYour balance: **{new_giver_balance:,.2f}**{symbol}\nTheir balance: **{new_receiver_balance:,.2f}{symbol}**")
+        await ctx.channel.send(f"You gave **{amount:,.4g}**{symbol} to {receiver.mention}.\nYour balance: **{new_giver_balance:,.4g}**{symbol}\nTheir balance: **{new_receiver_balance:,.4g}{symbol}**")
 
     @commands.command(name="circulation", aliases=['circ', 'total', 'all'])
     async def total_wealth(self, ctx):
@@ -133,7 +133,7 @@ class Economy(commands.Cog):
         avg_tokens = tokens / db_count
         avg_coins = coins / db_count
 
-        description = f"**Members in database: __{db_count}__**\n\n**Tokens:** `{tokens:,.2f}`{self.bot.token_symbol}\n**Average:** `{avg_tokens:,.2f}`{self.bot.token_symbol}\n\n**Coins:** `{coins:,.2f}`{self.bot.coin_symbol}\n**Average:** `{avg_coins:,.2f}`{self.bot.coin_symbol}"
+        description = f"**Members in database: __{db_count}__**\n\n**Tokens:** `{tokens:,.4g}`{self.bot.token_symbol}\n**Average:** `{avg_tokens:,.4g}`{self.bot.token_symbol}\n\n**Coins:** `{coins:,.4g}`{self.bot.coin_symbol}\n**Average:** `{avg_coins:,.4g}`{self.bot.coin_symbol}"
         embed = nextcord.Embed(title=f"__{ctx.guild.name}'s Server Worth__", description=description)
         await ctx.channel.send(embed=embed)
         
@@ -160,7 +160,7 @@ class Economy(commands.Cog):
                 if (account['tokens'] == 0):
                     break
                 count += 1
-                description += f"**#{count}**: `{account['tokens']:,.2f}`<:ethanger:763411726741143572> - {is_user}{account['name']}{is_user}\n"
+                description += f"**#{count}**: `{account['tokens']:,.4g}`<:ethanger:763411726741143572> - {is_user}{account['name']}{is_user}\n"
         elif currency == "coins":
             accounts = self.bot.ethan_tokens.find().sort("coins", pymongo.DESCENDING).limit(20)
             for account in accounts:
@@ -171,7 +171,7 @@ class Economy(commands.Cog):
                 if (account['coins'] == 0):
                     break
                 count += 1
-                description += f"**#{count}**: `{account['coins']:,.2f}`<:ethoggers:868201785301561394> - {is_user}{account['name']}{is_user}\n"
+                description += f"**#{count}**: `{account['coins']:,.4g}`<:ethoggers:868201785301561394> - {is_user}{account['name']}{is_user}\n"
 
         embed = nextcord.Embed(title=f"{ctx.guild.name}'s {currency.capitalize()} Leaderboard", description=description)
         await ctx.channel.send(embed=embed)
@@ -309,8 +309,8 @@ class Economy(commands.Cog):
 
                     await update_user_account(self, member=user, tokens=earned_tokens, coins=earned_coins)
 
-                    user_earnings += f"**{user_name}**: **{value}** msgs (**{msg_percent * 100:.2f}**%) = **{earned_tokens:,.2f}**{self.bot.token_symbol} + **{earned_coins:,.2f}**{self.bot.coin_symbol}\n"
-                description = f"Token Payout: **{tokens['inflation_total']:,.2f}**{self.bot.token_symbol}\nCoin Payout: **{coins['inflation_total']:,.2f}**{self.bot.coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings:**__\n{user_earnings}"
+                    user_earnings += f"**{user_name}**: **{value}** msgs (**{msg_percent * 100:.2f}**%) = **{earned_tokens:,.4g}**{self.bot.token_symbol} + **{earned_coins:,.4g}**{self.bot.coin_symbol}\n"
+                description = f"Token Payout: **{tokens['inflation_total']:,.4g}**{self.bot.token_symbol}\nCoin Payout: **{coins['inflation_total']:,.4g}**{self.bot.coin_symbol}\n\n__**Breakdown:**__\nMessages: **{count}**/**{success}**\nUsers Participated: **{users}**\n\n__**User Earnings:**__\n{user_earnings}"
             else:
                 tokens = 0
                 coins = 0            
@@ -413,6 +413,6 @@ class Economy(commands.Cog):
             }
             self.bot.ethan_tokens.update_one(query, data)
 
-            await ctx.channel.send(f"{ctx.author.mention} You've been awarded **{amount:,.2f}**{self.bot.token_symbol}. You now have **{new_tokens:,.2f}**{self.bot.token_symbol}")
+            await ctx.channel.send(f"{ctx.author.mention} You've been awarded **{amount:,.4g}**{self.bot.token_symbol}. You now have **{new_tokens:,.4g}**{self.bot.token_symbol}")
         else:
             await ctx.channel.send(f"{ctx.author.mention} lol no.")

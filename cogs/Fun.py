@@ -128,12 +128,15 @@ class Fun(commands.Cog):
             await ctx.channel.send(f"{member} {random.choice(responses)}")
 
     @commands.command(name="andify", aliases=["andy", "andeth"])
-    async def andify(self, ctx, message: str, andethpower):
+    async def andify(self, ctx, message: str, andethpower=5):
         try:
             andethpower = int(andethpower)
         except TypeError:
             await ctx.channel.send("Enter a number from 1 to 10 idiot")
-            return 
+            return
+        except ValueError:
+            await ctx.channel.send("Give me an integer asshole")
+            return
         if (andethpower > 10 or andethpower < 1):
             await ctx.channel.send("Give me a power level between 1 and 10, dumbass")
             return
@@ -147,6 +150,10 @@ class Fun(commands.Cog):
         string = ""
         for word in words:
             string += f"{word} "
+
+        if (len(string) > 1999):
+            await ctx.channel.send("That exceeds character limits bitch")
+            return
 
         await ctx.channel.send(string)
 

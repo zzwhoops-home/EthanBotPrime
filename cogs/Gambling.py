@@ -40,7 +40,7 @@ class Gambling(commands.Cog):
         if (balance < amount):
             await ctx.channel.send(f"{ctx.author.mention} You don't have that much money idiot")
             return
-        await ctx.channel.send(f"{ctx.author.mention} Gambling **{amount:,.2f}**{symbol}. Choose a number from **1-10**! Type 'e' to exit.")
+        await ctx.channel.send(f"{ctx.author.mention} Gambling **{amount:,.4g}**{symbol}. Choose a number from **1-10**! Type 'e' to exit.")
 
         def check(m):
             return (
@@ -66,19 +66,19 @@ class Gambling(commands.Cog):
                 percent = random.randint(250, 600)
                 change = amount * (percent / 100)
                 await ctx.channel.send("https://ih1.redbubble.net/image.724682828.9041/flat,1000x1000,075,f.jpg")
-                await ctx.channel.send(f"{ctx.author.mention} Spot on! Congratulations, you've won **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
+                await ctx.channel.send(f"{ctx.author.mention} Spot on! Congratulations, you've won **{(change - amount):,.4g}**{symbol} (**{amount:,.4g}** --> **{change:,.4g}**) *({(percent / 100):.2f}x)*.")
             elif (difference == 1):
                 percent = random.randint(125, 165)
                 change = amount * (percent / 100)
-                await ctx.channel.send(f"{ctx.author.mention} I mean, you were pretty close. You get... a lil bit: **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
+                await ctx.channel.send(f"{ctx.author.mention} I mean, you were pretty close. You get... a lil bit: **{(change - amount):,.4g}**{symbol} (**{amount:,.4g}** --> **{change:,.4g}**) *({(percent / 100):.2f}x)*.")
             elif (difference == 2 or difference == 3):
                 percent = random.randint(30, 99)
                 change = amount * (percent / 100)
-                await ctx.channel.send(f"{ctx.author.mention} You weren't that close, so I'll just give you some of your money back: **{(change - amount):,.2f}**{symbol} (**{amount:,.2f}** --> **{change:,.2f}**) *({(percent / 100):.2f}x)*.")
+                await ctx.channel.send(f"{ctx.author.mention} You weren't that close, so I'll just give you some of your money back: **{(change - amount):,.4g}**{symbol} (**{amount:,.4g}** --> **{change:,.4g}**) *({(percent / 100):.2f}x)*.")
             else:
                 change = 0
                 await ctx.channel.send("https://i.imgur.com/BSSVwl6.png")
-                await ctx.channel.send(f"{ctx.author.mention} lmao you suck, I'll be taking **{amount:,.2f}**{symbol}")
+                await ctx.channel.send(f"{ctx.author.mention} lmao you suck, I'll be taking **{amount:,.4g}**{symbol}")
 
             member = ctx.author
             new_balance = balance + (change - amount)
@@ -107,6 +107,6 @@ class Gambling(commands.Cog):
             self.bot.ethan_tokens.update_one(query, data)
                 
             await asyncio.sleep(1)
-            await ctx.channel.send(f"{ctx.author.mention} You now have **{new_balance:,.2f}**{symbol}")
+            await ctx.channel.send(f"{ctx.author.mention} You now have **{new_balance:,.4g}**{symbol}")
         except asyncio.TimeoutError:
             await ctx.channel.send("{ctx.author.mention} Type at most **TWO NUMBERS** in *30* seconds **ITS NOT THAT HARD**.\nI should just take your money but... that would be a scam. EthanBot does not scam.")    

@@ -71,7 +71,7 @@ class BuyStocks(Select):
             currency = stock['currency']
             if (currency == 'USX'):
                 converted_price /= 100
-            description = f"{converted_price:,.2f}/unit\n"
+            description = f"{converted_price:,.4g}/unit\n"
             self.options.append(SelectOption
                 (
                     label = name,
@@ -95,7 +95,7 @@ class BuyStocks(Select):
         view.converted_price = view.stock['price'] * self.tokens_rate
         if (view.stock['currency'] == 'USX'):
             view.converted_price /= 100
-        embed = nextcord.Embed(title = f"Buying **{view.name}**:", description = f"How many units would you like to purchase? (Type 'max' for basically your entire balance)\n(`{view.converted_price:,.2f}`{bot.token_symbol}/unit)")
+        embed = nextcord.Embed(title = f"Buying **{view.name}**:", description = f"How many units would you like to purchase? (Type 'max' for basically your entire balance)\n(`{view.converted_price:,.4g}`{bot.token_symbol}/unit)")
         await interaction.response.send_message(embed=embed)
 
 class BuyStocksView(View):    
@@ -162,7 +162,7 @@ class Stocks(commands.Cog):
             else:
                 stock_data = user_stocks["stock_data"]
 
-            description = f"**Conversion Rate**: `{self.tokens_rate:,.2f}`{self.bot.token_symbol}/USD\n\n"
+            description = f"**Conversion Rate**: `{self.tokens_rate:,.4g}`{self.bot.token_symbol}/USD\n\n"
 
             for stock in stocks:
                 symbol = stock['symbol'].replace('=F', '')
@@ -172,7 +172,7 @@ class Stocks(commands.Cog):
                 if (currency == 'USX'):
                     price /= 100
                 converted_price = price * self.tokens_rate
-                description += f"({symbol}) **{name}**: `{converted_price:,.2f}`{self.bot.token_symbol}/**unit** - ($`{price:,.2f}`)\n"
+                description += f"({symbol}) **{name}**: `{converted_price:,.4g}`{self.bot.token_symbol}/**unit** - ($`{price:,.4g}`)\n"
 
             query = {"type": "stocks"}
             last_update = bot.general_info.find_one(query)['update_time']
@@ -194,7 +194,7 @@ class Stocks(commands.Cog):
                         shares = stock_data[name]
                         total_value_usd = shares * price
                         total_value_tokens = total_value_usd * self.tokens_rate
-                        description += f"\n**{name}**: `{shares:,.3f}`**u** worth `{total_value_tokens:,.2f}`{bot.token_symbol} ($`{total_value_usd:,.2f}`)"
+                        description += f"\n**{name}**: `{shares:,.3f}`**u** worth `{total_value_tokens:,.4g}`{bot.token_symbol} ($`{total_value_usd:,.4g}`)"
 
             embed = nextcord.Embed(title=f"{ctx.author.name}'s Stonks", description=description)
             await ctx.channel.send(embed=embed)
@@ -248,7 +248,7 @@ class Stocks(commands.Cog):
             total_price = amount * view.converted_price
             # return if the user doesn't have enough money.
             if (bal < total_price):
-                await ctx.channel.send(f"lmao you don't have enough money fool, you need **{total_price:,.2f}**{bot.token_symbol} to buy **{amount:,.3f}** units of {view.name}")
+                await ctx.channel.send(f"lmao you don't have enough money fool, you need **{total_price:,.4g}**{bot.token_symbol} to buy **{amount:,.3f}** units of {view.name}")
                 return
             new_balance = bal - total_price
             
@@ -286,7 +286,7 @@ class Stocks(commands.Cog):
             }
             bot.ethan_tokens.update_one(query, data)
 
-            embed = nextcord.Embed(title=f"Purchased **{view.name}** ({view.stock['symbol']})", description=f"**Total**: `{amount:,.3f}`u for **`{total_price:,.2f}`**{bot.token_symbol} (`{view.converted_price:,.2f}`{bot.token_symbol}/unit)\n**You now have: `{new_balance:,.2f}`**{bot.token_symbol}")
+            embed = nextcord.Embed(title=f"Purchased **{view.name}** ({view.stock['symbol']})", description=f"**Total**: `{amount:,.3f}`u for **`{total_price:,.4g}`**{bot.token_symbol} (`{view.converted_price:,.4g}`{bot.token_symbol}/unit)\n**You now have: `{new_balance:,.4g}`**{bot.token_symbol}")
             await ctx.channel.send(embed=embed)
             return
 

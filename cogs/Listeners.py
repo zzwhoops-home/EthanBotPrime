@@ -36,7 +36,10 @@ class Listeners(commands.Cog):
         #     await message.channel.send(f"{message.author.mention} HEY TL;DR! THAT MESSAGE WAS {len(message.content)} characters!")
         if (message.content[:5].strip() == prefix):
             return
-        if (self.bot.user.id != message.author.id):                
+        if (self.bot.user.id != message.author.id):
+            if re.search(r'\bmao\b', message.content.lower()):
+                text = "Zedong Mao is the unique leader who is statesman, thinker, revolutionist, strategist, poet and penman in Chinese history. In all his life not only did he changed the Chinese history in 20 Century, but also had great effect on the world.\nThe collection of poker precious photo collection of Chairman Mao different periods, and valuable for collection. We will always cherish the memory of a great man, remember history!"
+                await message.channel.send(text)
             msg = message.content.strip().lower()
             choices_all = ["no sex", "ethan!", "ethan lee!", "my king!", "love ethan lee", "ETHAN LEE!!!!!", ":hot_face:", "STAN ETHAN LEE!", "vote ethan gang", "ethan lee best boy", "ETHAN sdo[f-dsfpasfkhsalduhfluashdf uaudfsa", "wouhaoguhaeg"]
             if 'ethan' in msg and message.channel.id != 765710257753948190:
@@ -154,6 +157,10 @@ class Listeners(commands.Cog):
             if "steve" in msg:
                 text = "Anyone and everyone had become my target. Frenzy has overtaken me and I simply am now tethering on the edge--there is no escape, not even death. No blissful end shall greet me; only the sight of my deeds will bore into my soul."
                 await message.channel.send(text)
+            if "mwah" in msg:
+                await message.channel.send(":kissing_heart:")
+            if "thicc" in msg or "thick" in msg:
+                await message.channel.send("thicc rhymes with zacc, it's also like ethan's thighs")
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")

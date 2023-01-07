@@ -45,7 +45,7 @@ class Ethan(commands.Cog):
             if (currency == "coins"):
                 data["coins"] = amount
             self.bot.ethan_tokens.insert_one(data)        
-            await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
+            await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.4g}** {symbol}.")
         else:
             query = {
                 "id": id
@@ -71,7 +71,7 @@ class Ethan(commands.Cog):
                 }
                 self.bot.ethan_tokens.update_one(query, data)
 
-            await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}.")
+            await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.4g}** {symbol}.")
 
     @commands.command(name="edit", aliases=["add"])
     @commands.cooldown(1, 3, commands.BucketType.user)
@@ -97,7 +97,7 @@ class Ethan(commands.Cog):
                 await economy.create_token_account(ctx, member, tokens=amount)
             if (currency == "coins"):
                 await economy.create_token_account(ctx, member, coins=amount)
-            await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.2f}** {symbol}")
+            await ctx.channel.send(f"Okay, {member.mention} now has **{amount:,.4g}** {symbol}")
         else:
             query = {
                 "id": id
@@ -126,9 +126,9 @@ class Ethan(commands.Cog):
                 self.bot.ethan_tokens.update_one(query, data)
 
             if (amount < 0):
-                await ctx.channel.send(f"Okay, I've taken **{amount:,.2f}** {symbol} from {member.mention}.\nThey now have **{new_balance:,.2f}** {symbol}.")
+                await ctx.channel.send(f"Okay, I've taken **{amount:,.4g}** {symbol} from {member.mention}.\nThey now have **{new_balance:,.4g}** {symbol}.")
             else:
-                await ctx.channel.send(f"Okay, I've added **{amount:,.2f}** {symbol} to {member.mention}.\nThey now have **{new_balance:,.2f}** {symbol}.")
+                await ctx.channel.send(f"Okay, I've added **{amount:,.4g}** {symbol} to {member.mention}.\nThey now have **{new_balance:,.4g}** {symbol}.")
 
     @commands.command(name="editall", aliases=["addall"])
     @commands.cooldown(1, 5)
@@ -174,7 +174,7 @@ class Ethan(commands.Cog):
         types = ["tokens", "coins"]
         symbol = await economy.get_symbol(currency)
 
-        if (ctx.author.id != 390601966423900162):
+        if (ctx.author.id != 292448459909365760):
             await ctx.channel.send("Only Ethan can cause hyperinflation!")
             self.hyperinflation.reset_cooldown(ctx)
             return
