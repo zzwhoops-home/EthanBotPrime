@@ -416,3 +416,120 @@ class Economy(commands.Cog):
             await ctx.channel.send(f"{ctx.author.mention} You've been awarded **{amount:,.4g}**{self.bot.token_symbol}. You now have **{new_tokens:,.4g}**{self.bot.token_symbol}")
         else:
             await ctx.channel.send(f"{ctx.author.mention} lol no.")
+
+    @commands.command(name="steal", aliases=["rob", "indefinitelyborrow"])
+    # change to 120 SECONDS AFTER UR DONE
+    @commands.cooldown(1, 1, commands.BucketType.user)
+    async def steal(self, ctx, victim: nextcord.Member = None):
+        if (victim == None or victim.id == ctx.author.id):
+            await ctx.channel.send("You can't steal from yourself, nice try! Give me a user to rob!")
+            return
+        
+        robber = ctx.author
+            
+        tokens_symbol = await self.get_symbol("tokens")
+        query = {
+            "type": "currency"
+        }
+        rates = self.bot.general_info.find_one(query)
+        tokens_rate = rates["tokens_rate"]
+
+        robber_id = robber.id
+        robber_existing = self.bot.ethan_tokens.find_one({"id": robber_id})
+        if robber_existing == None:
+            await ctx.channel.send("lmao u gotta create an account with eb!bal before you can rob someone.")
+            return
+        
+        robber_current = robber_existing['tokens']
+
+        if robber_current <= 0:
+            await ctx.channel.send(f"Well I would let you go into more debt, but you gotta have a positive token balance to rob someone. You have **{robber_current}**{tokens_symbol}.")
+            return
+
+        victim_id = victim.id
+        victim_existing = self.bot.ethan_tokens.find_one({"id": victim_id})
+        
+        if victim_existing == None or victim_existing['tokens'] <= 0:
+            fine = random.randint(0, 100) * tokens_rate
+            await ctx.channel.send(f"Hey, leave this penniless person alone, you heartless freak. I'm taking **{fine:,.4g}**{tokens_symbol} because of that. Jerk. Scum of the earth.")
+            
+            robber_new = robber_current - fine
+
+            robber_data = {
+                "$set": {
+                    "tokens": robber_new
+                }
+            }
+            self.bot.ethan_tokens.update_one({"id": robber_id}, robber_data)
+
+            await ctx.channel.send(f"You now have **{robber_new:,.4g}**{tokens_symbol}, asshole.")
+            return
+
+        victim_current = victim_existing['tokens']
+
+        async def update_balances(amount):
+            robber_new = robber_current + amount
+            victim_new = victim_current - amount
+
+            robber_data = {
+                "$set": {
+                    "tokens": robber_new
+                }
+            }
+            victim_data = {
+                "$set": {
+                    "tokens": victim_new
+                }
+            }
+            self.bot.ethan_tokens.update_one({"id": robber_id}, robber_data)
+            self.bot.ethan_tokens.update_one({"id": victim_id}, victim_data)
+            await ctx.channel.send(f"{robber.mention} now has **{robber_new:,.4g}**{tokens_symbol}. {victim.mention} now has **{victim_new:,.4g}**{tokens_symbol}.")     
+
+        async def update_balances_fractions(fraction):
+            actual = fraction / 100
+            amount = victim_current * actual
+
+            robber_new = robber_current + amount
+            victim_new = victim_current - amount
+
+            robber_data = {
+                "$set": {
+                    "tokens": robber_new
+                }
+            }
+            victim_data = {
+                "$set": {
+                    "tokens": victim_new
+                }
+            }
+            self.bot.ethan_tokens.update_one({"id": robber_id}, robber_data)
+            self.bot.ethan_tokens.update_one({"id": victim_id}, victim_data)
+            await ctx.channel.send(f"{robber.mention}, you stole **{amount:,.4g}**{tokens_symbol} ({actual:.1%}) from {victim.mention}.")
+            await ctx.channel.send(f"{robber.mention} now has **{robber_new:,.4g}**{tokens_symbol}. {victim.mention} now has **{victim_new:,.4g}**{tokens_symbol}.")     
+
+
+        roll = random.randint(1, 100)
+        if (roll <= 25):
+            fine = random.randint(0, 100) * tokens_rate
+
+            await ctx.channel.send(f"Well {robber.mention}, you tried to rob {victim.mention} but Ethan's police force caught you in the act. They don't believe in prisons, but you were forced to pay {victim.mention} **{fine:,.4g}**{tokens_symbol}. Get better at robbing other people next time, idiot.")
+            await update_balances(-fine)
+            return
+        elif (roll <= 80):
+            theft = random.randint(40, 80) / 10
+
+            await ctx.channel.send(f"{robber.mention}, you stole a little bit! {victim.mention} will probably not be too happy.")
+            await update_balances_fractions(theft)
+            return
+        elif (roll <= 98):
+            theft = random.randint(150, 400) / 10
+
+            await ctx.channel.send(f"{robber.mention}, you stole a good chunk from {victim.mention}!")
+            await update_balances_fractions(theft)
+            return
+        elif (roll > 98):
+            theft = random.randint(700, 950) / 10
+
+            await ctx.channel.send(f"{robber.mention}, you stole BASICALLY EVERYTHING LOL {victim.mention} just got rolled <:andeth:763036789174435910>")
+            await update_balances_fractions(theft)
+            return

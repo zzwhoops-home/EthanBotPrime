@@ -174,7 +174,7 @@ class Ethan(commands.Cog):
         types = ["tokens", "coins"]
         symbol = await economy.get_symbol(currency)
 
-        if (ctx.author.id != 292448459909365760):
+        if (ctx.author.id != 390601966423900162):
             await ctx.channel.send("Only Ethan can cause hyperinflation!")
             self.hyperinflation.reset_cooldown(ctx)
             return

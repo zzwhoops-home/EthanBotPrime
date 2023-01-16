@@ -119,7 +119,6 @@ class Listeners(commands.Cog):
                 await message.channel.send("https://i.kym-cdn.com/entries/icons/original/000/030/329/cover1.jpg")
             if "too many channels" in msg:
                 await message.channel.send(f"Hey {message.author.mention} you little shit, there can never be enough channels!")
-                await message.delete()
             if "gold plated pocket watch" in msg and "diamond encrusted monocle" in msg:
                 await message.channel.send(f"Hey {message.author.mention}, fuck you rich kid!")
             if "vaporeon" in msg:

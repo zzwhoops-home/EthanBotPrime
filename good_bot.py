@@ -172,7 +172,7 @@ class Stocks(commands.Cog):
                 if (currency == 'USX'):
                     price /= 100
                 converted_price = price * self.tokens_rate
-                description += f"({symbol}) **{name}**: `{converted_price:,.4g}`{self.bot.token_symbol}/**unit** - ($`{price:,.4g}`)\n"
+                description += f"({symbol}) **{name}**: `{converted_price:,.4g}`{self.bot.token_symbol}/**unit** - ($`{price:,.2f}`)\n"
 
             query = {"type": "stocks"}
             last_update = bot.general_info.find_one(query)['update_time']
@@ -194,7 +194,7 @@ class Stocks(commands.Cog):
                         shares = stock_data[name]
                         total_value_usd = shares * price
                         total_value_tokens = total_value_usd * self.tokens_rate
-                        description += f"\n**{name}**: `{shares:,.3f}`**u** worth `{total_value_tokens:,.4g}`{bot.token_symbol} ($`{total_value_usd:,.4g}`)"
+                        description += f"\n**{name}**: `{shares:,.3f}`**u** worth `{total_value_tokens:,.4g}`{bot.token_symbol} ($`{total_value_usd:,.2f}`)"
 
             embed = nextcord.Embed(title=f"{ctx.author.name}'s Stonks", description=description)
             await ctx.channel.send(embed=embed)
@@ -552,6 +552,7 @@ class Zach(commands.Cog):
         self.bot = bot
 
     @commands.command(name="exportchannels")
+    @commands.check_any(commands.is_owner())
     async def export_channels(self, ctx):
         guild = bot.get_guild(423583970328838154)
         channels = {}
@@ -565,6 +566,16 @@ class Zach(commands.Cog):
         with open("channels.txt", "wb") as f:
             for key, value in channels.items(): 
                 f.write(('%s:%s\n' % (key, value)).encode('utf8'))
+
+    @commands.command(name="DOTHETHINGODROBOT")
+    @commands.check_any(commands.is_owner())
+    async def do_thing(self, ctx):
+        guild = bot.get_guild(423583970328838154)
+        channels = {}
+
+        for channel in guild.text_channels:
+            await channel.send("░██████╗░█████╗░███╗░░░███╗  ░██████╗██╗░░░██╗██╗░░██╗\n██╔════╝██╔══██╗████╗░████║  ██╔════╝██║░░░██║╚██╗██╔╝\n╚█████╗░███████║██╔████╔██║  ╚█████╗░██║░░░██║░╚███╔╝░\n░╚═══██╗██╔══██║██║╚██╔╝██║  ░╚═══██╗██║░░░██║░██╔██╗░\n██████╔╝██║░░██║██║░╚═╝░██║  ██████╔╝╚██████╔╝██╔╝╚██╗\n╚═════╝░╚═╝░░╚═╝╚═╝░░░░░╚═╝  ╚═════╝░░╚═════╝░╚═╝░░╚═╝")
+
 
 
 # @bot.event
