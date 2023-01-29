@@ -160,6 +160,12 @@ class Listeners(commands.Cog):
                 await message.channel.send(":kissing_heart:")
             if "thicc" in msg or "thick" in msg:
                 await message.channel.send("thicc rhymes with zacc, it's also like ethan's thighs")
+            if "number" in msg:
+                chance = random.randint(1, 5)
+                if (chance == 1):
+                    await message.channel.send("your days are numbered...")
+            if "balls" in msg:
+                await message.channel.send("Can I put my balls in your jaws?")
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")

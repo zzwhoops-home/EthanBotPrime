@@ -181,7 +181,7 @@ class Fun(commands.Cog):
         days, remainder = divmod(seconds, 86400)
         hours, remainder = divmod(remainder, 3600)
         minutes, seconds = divmod(remainder, 60)
-        description = f"**{days:.0f}** days, **{hours:.0f}** hours, **{minutes:.0f}** minutes, **{seconds:.0f}** seconds until graduation!!!\n"
+        description = f"**{days:.0f}** days, **{hours:.0f}** hours, **{minutes:.0f}** minutes, **{seconds:.0f}** seconds until graduation on **June 15th, 2023** at **12:30 PM**!!!\n"
 
         seconds = duration.total_seconds()
 

@@ -419,10 +419,11 @@ class Economy(commands.Cog):
 
     @commands.command(name="steal", aliases=["rob", "indefinitelyborrow"])
     # change to 120 SECONDS AFTER UR DONE
-    @commands.cooldown(1, 1, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def steal(self, ctx, victim: nextcord.Member = None):
         if (victim == None or victim.id == ctx.author.id):
             await ctx.channel.send("You can't steal from yourself, nice try! Give me a user to rob!")
+            self.steal.reset_cooldown(ctx)
             return
         
         robber = ctx.author
@@ -438,12 +439,14 @@ class Economy(commands.Cog):
         robber_existing = self.bot.ethan_tokens.find_one({"id": robber_id})
         if robber_existing == None:
             await ctx.channel.send("lmao u gotta create an account with eb!bal before you can rob someone.")
+            self.steal.reset_cooldown(ctx)
             return
         
         robber_current = robber_existing['tokens']
 
         if robber_current <= 0:
             await ctx.channel.send(f"Well I would let you go into more debt, but you gotta have a positive token balance to rob someone. You have **{robber_current}**{tokens_symbol}.")
+            self.steal.reset_cooldown(ctx)
             return
 
         victim_id = victim.id
@@ -483,7 +486,7 @@ class Economy(commands.Cog):
             }
             self.bot.ethan_tokens.update_one({"id": robber_id}, robber_data)
             self.bot.ethan_tokens.update_one({"id": victim_id}, victim_data)
-            await ctx.channel.send(f"{robber.mention} now has **{robber_new:,.4g}**{tokens_symbol}. {victim.mention} now has **{victim_new:,.4g}**{tokens_symbol}.")     
+            await ctx.channel.send(f"{robber.name} now has **{robber_new:,.4g}**{tokens_symbol}. {victim.name} now has **{victim_new:,.4g}**{tokens_symbol}.")     
 
         async def update_balances_fractions(fraction):
             actual = fraction / 100
@@ -504,8 +507,8 @@ class Economy(commands.Cog):
             }
             self.bot.ethan_tokens.update_one({"id": robber_id}, robber_data)
             self.bot.ethan_tokens.update_one({"id": victim_id}, victim_data)
-            await ctx.channel.send(f"{robber.mention}, you stole **{amount:,.4g}**{tokens_symbol} ({actual:.1%}) from {victim.mention}.")
-            await ctx.channel.send(f"{robber.mention} now has **{robber_new:,.4g}**{tokens_symbol}. {victim.mention} now has **{victim_new:,.4g}**{tokens_symbol}.")     
+            await ctx.channel.send(f"{robber.name}, you stole **{amount:,.4g}**{tokens_symbol} ({actual:.1%}) from {victim.name}.")
+            await ctx.channel.send(f"{robber.name} now has **{robber_new:,.4g}**{tokens_symbol}. {victim.name} now has **{victim_new:,.4g}**{tokens_symbol}.")     
 
 
         roll = random.randint(1, 100)
@@ -515,7 +518,10 @@ class Economy(commands.Cog):
             await ctx.channel.send(f"Well {robber.mention}, you tried to rob {victim.mention} but Ethan's police force caught you in the act. They don't believe in prisons, but you were forced to pay {victim.mention} **{fine:,.4g}**{tokens_symbol}. Get better at robbing other people next time, idiot.")
             await update_balances(-fine)
             return
-        elif (roll <= 80):
+        elif (roll <= 60):
+            await ctx.channel.send(f"lol you failed. get good at robbing people")
+            return
+        elif (roll <= 85):
             theft = random.randint(40, 80) / 10
 
             await ctx.channel.send(f"{robber.mention}, you stole a little bit! {victim.mention} will probably not be too happy.")
@@ -528,7 +534,7 @@ class Economy(commands.Cog):
             await update_balances_fractions(theft)
             return
         elif (roll > 98):
-            theft = random.randint(700, 950) / 10
+            theft = random.randint(850, 990) / 10
 
             await ctx.channel.send(f"{robber.mention}, you stole BASICALLY EVERYTHING LOL {victim.mention} just got rolled <:andeth:763036789174435910>")
             await update_balances_fractions(theft)
