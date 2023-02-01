@@ -52,7 +52,7 @@ class Listeners(commands.Cog):
                     choice = random.choice(choices_all)
                     await message.channel.send(choice)
             if 'connor' in msg:
-                await message.channel.send("ethan sex")
+                await message.channel.send("ethan sad")
             if 'edge' in msg and 'play' in msg:
                 await message.channel.send("ethedge ethplay ethgasm")
             if 'higgy' in msg:

@@ -578,14 +578,16 @@ class Zach(commands.Cog):
 
 
 
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
-    if isinstance(error, commands.errors.CommandInvokeError):
-        await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
-    else:
-        print(error)
+# @bot.event
+# async def on_command_error(ctx, error):
+#     if isinstance(error, commands.CommandOnCooldown):
+#         await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
+#     if isinstance(error, commands.errors.MissingPermissions):
+#         await ctx.channel.send(f"You don't have permission to do this. Nice try lol")
+#     if isinstance(error, commands.errors.CommandInvokeError):
+#         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
+#     else:
+#         print(error)
 
 def setup(bot):
     bot.add_cog(Listeners(bot))
