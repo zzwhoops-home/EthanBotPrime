@@ -7,6 +7,7 @@ import math
 import pymongo
 from pymongo import MongoClient
 import requests
+import json
 
 import nextcord
 from nextcord import SelectOption, ButtonStyle
@@ -576,6 +577,43 @@ class Zach(commands.Cog):
         for channel in guild.text_channels:
             await channel.send("░██████╗░█████╗░███╗░░░███╗  ░██████╗██╗░░░██╗██╗░░██╗\n██╔════╝██╔══██╗████╗░████║  ██╔════╝██║░░░██║╚██╗██╔╝\n╚█████╗░███████║██╔████╔██║  ╚█████╗░██║░░░██║░╚███╔╝░\n░╚═══██╗██╔══██║██║╚██╔╝██║  ░╚═══██╗██║░░░██║░██╔██╗░\n██████╔╝██║░░██║██║░╚═╝░██║  ██████╔╝╚██████╔╝██╔╝╚██╗\n╚═════╝░╚═╝░░╚═╝╚═╝░░░░░╚═╝  ╚═════╝░░╚═════╝░╚═╝░░╚═╝")
 
+    @commands.command(name="purgenicks")
+    @commands.has_permissions(administrator=True)
+    async def purge_nicks(self, ctx):
+        members = [member for member in ctx.guild.members if not member.bot]
+
+        message = await ctx.channel.send("Purging nicknames...")
+        done = 0
+        for m in members:
+            done += 1
+            if (m.guild_permissions.administrator):
+                continue
+            await m.edit(nick=None)
+        await message.edit(content=f"Purged nicknames from **{len(members)}** members.")
+
+    @commands.command(name="randomnicks")
+    @commands.has_permissions(administrator=True)
+    async def random_nicks(self, ctx):
+        members = [member for member in ctx.guild.members if not member.bot]
+        req = requests.get(f"https://random-word-api.herokuapp.com/word?number=200")
+        words = json.loads(req.text)
+
+        message = await ctx.channel.send("Assigning random nicknames...")
+
+        for m in range(len(members)):
+            if (members[m].guild_permissions.administrator):
+                continue
+            nick = random.choice(words)
+            while True:
+                word = random.choice(words)
+                length = len(nick)
+                if (length + len(word) > 31):
+                    break
+                else:
+                    nick += f" {word}"
+            await members[m].edit(nick=nick)
+
+        await message.edit(content=f"Assigned random nicknames to **{len(members)}** members.")
 
 
 # @bot.event
