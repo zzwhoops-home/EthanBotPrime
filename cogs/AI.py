@@ -20,8 +20,8 @@ class AI(commands.Cog):
             "$inc": {
                 "tokens_used": usage,
                 "eai_gen": 1 if type == "eai" else 0,
-                "nai_gen": 1 if type == "eai" else 0,
-                "lai_gen": 1 if type == "eai" else 0
+                "nai_gen": 1 if type == "nai" else 0,
+                "lai_gen": 1 if type == "lai" else 0
             }
         }
         self.bot.general_info.update_one(query, data, upsert=True)
@@ -61,8 +61,12 @@ class AI(commands.Cog):
 
         await ctx.channel.send(f"{ctx.author.mention} {text}")
 
-        # snarky response if AI response is cut off
         usage = int(response_json['usage']['total_tokens'])
+        
+        # update db with usage stats
+        await self.update_ai_db(usage, "eai")
+
+        # snarky response if AI response is cut off
         if (usage >= max_tokens):
             await ctx.channel.send(f"{ctx.author.mention} Hey asshole, if this response is cut off, it's to prevent me from going broke in API cash.")
             return
@@ -99,8 +103,12 @@ class AI(commands.Cog):
 
         await ctx.channel.send(f"{ctx.author.mention} {text}")
 
-        # snarky response if AI response is cut off
         usage = int(response_json['usage']['total_tokens'])
+
+        # update db with usage stats
+        await self.update_ai_db(usage, "nai")
+
+        # snarky response if AI response is cut off
         if (usage >= max_tokens):
             await ctx.channel.send(f"{ctx.author.mention} Hey asshole, if this response is cut off, it's to prevent me from going broke in API cash.")
             return
@@ -137,13 +145,41 @@ class AI(commands.Cog):
 
         await ctx.channel.send(f"{ctx.author.mention} {text}")
 
-        # snarky response if AI response is cut off
         usage = int(response_json['usage']['total_tokens'])
-        await update_ai_db(usage, "lai")
+
+        # update db with usage stats
+        await self.update_ai_db(usage, "lai")
+        
+        # snarky response if AI response is cut off
         if (usage >= max_tokens):
             await ctx.channel.send(f"{ctx.author.mention} Hey, this response may be cut off due to API limitations!")
             return
 
     @commands.command(name="ethanaistats", aliases=["aistats"])
     async def get_ai_stats(self, ctx):
-        await ctx.channel.send(f"{ctx.author.mention}")
+        economy = self.bot.get_cog('Economy')
+        tokens_symbol = await economy.get_symbol('tokens')
+
+        query = {
+            "type": "ai_stats"
+        }
+        stats = self.bot.general_info.find_one(query)
+        eai = stats['eai_gen']
+        nai = stats['nai_gen']
+        lai = stats['lai_gen']
+        total_uses = eai + nai + lai
+        tokens_used = stats['tokens_used']
+        money = tokens_used / 50000
+
+        query = {
+            "type": "currency"
+        }
+        rates = self.bot.general_info.find_one(query)
+        tokens_rate = rates["tokens_rate"]
+        tokens_amount = tokens_rate * money
+
+        description = f"**Total snarky responses:** {eai}\n**Total normal responses:** {nai}\n**Total loving responses:** {lai}\n**Total responses:** {total_uses}\n\n**Tokens used:** {tokens_used:,}\n**Money spent :money_with_wings::** ${money:,.4f} ({tokens_amount:,.4g}{tokens_symbol})"
+
+        embed=nextcord.Embed(title="**EthanAI Usage Statistics**", description=description)
+
+        await ctx.channel.send(embed=embed)
