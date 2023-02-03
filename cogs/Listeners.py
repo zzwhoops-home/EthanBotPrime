@@ -6,7 +6,6 @@ import asyncio
 
 prefix = "eb!"
 
-
 class Listeners(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

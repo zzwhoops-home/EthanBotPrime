@@ -20,6 +20,7 @@ from cogs.Ethan import Ethan
 from cogs.Economy import Economy
 from cogs.Gambling import Gambling
 from cogs.Fun import Fun
+from cogs.AI import AI
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -616,16 +617,16 @@ class Zach(commands.Cog):
         await message.edit(content=f"Assigned random nicknames to **{len(members)}** members.")
 
 
-# @bot.event
-# async def on_command_error(ctx, error):
-#     if isinstance(error, commands.CommandOnCooldown):
-#         await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
-#     if isinstance(error, commands.errors.MissingPermissions):
-#         await ctx.channel.send(f"You don't have permission to do this. Nice try lol")
-#     if isinstance(error, commands.errors.CommandInvokeError):
-#         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
-#     else:
-#         print(error)
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
+    if isinstance(error, commands.errors.MissingPermissions):
+        await ctx.channel.send(f"You don't have permission to do this. Nice try lol")
+    if isinstance(error, commands.errors.CommandInvokeError):
+        await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
+    else:
+        print(error)
 
 def setup(bot):
     bot.add_cog(Listeners(bot))
@@ -636,6 +637,7 @@ def setup(bot):
     bot.add_cog(Fun(bot))
     bot.add_cog(Froligarch(bot))
     bot.add_cog(Zach(bot))
+    bot.add_cog(AI(bot))
 
 setup(bot)
 bot.run(TOKEN)
