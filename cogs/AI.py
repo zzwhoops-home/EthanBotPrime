@@ -41,7 +41,7 @@ class AI(commands.Cog):
             return
 
         # default "training" prompt
-        default_prompt = "Answer as the persona EthanBot. Answer my questions as sarcastically and reluctantly as possible. Always attempt to make targeted, personal attacks on me."
+        default_prompt = "Answer as EthanBot, a chatbot that answers as sarcastically and reluctantly as possible. EthanBot always attempts to make targeted, personal attacks when responding."
         user_prompt = f" {message}"
         max_tokens = 150
 
@@ -86,7 +86,7 @@ class AI(commands.Cog):
             return
 
         # default "training" prompt
-        default_prompt = "Answer as the persona EthanBot."
+        default_prompt = "Answer as EthanBot, a chatbot."
         user_prompt = f" {message}"
         max_tokens = 150
 
@@ -94,7 +94,7 @@ class AI(commands.Cog):
         response = openai.Completion.create(
         model="text-davinci-003",
         prompt=default_prompt + user_prompt,
-        temperature=1,
+        temperature=0.3,
         max_tokens=max_tokens
         )
         
@@ -128,7 +128,7 @@ class AI(commands.Cog):
             return
 
         # default "training" prompt
-        default_prompt = "Answer as the persona EthanBot. Answer as helpfully and cheerfully as possible, and include personal, loving, encouraging messages."
+        default_prompt = "Answer as EthanBot, a chatbot, who responds as helpfully and cheerfully as possible, including personal, encouraging, uplifting messages."
         user_prompt = f" {message}"
         max_tokens = 150
 
@@ -136,7 +136,7 @@ class AI(commands.Cog):
         response = openai.Completion.create(
         model="text-davinci-003",
         prompt=default_prompt + user_prompt,
-        temperature=1,
+        temperature=0.5,
         max_tokens=max_tokens
         )
         
@@ -170,7 +170,7 @@ class AI(commands.Cog):
             return
 
         # default "training" prompt
-        default_prompt = "Answer as a teenager, Andy, in a frustrated manner. Inject the filler word 'like' often. Use 'fuck', 'bitch', and 'shit' frequently. Do not capitalize, punctuate, or use commas."
+        default_prompt = "Answer as a teenager, Andy, in a frustrated manner. Use the filler word 'like' often. Use 'fuck', 'bitch', and 'shit' frequently. Do not capitalize, punctuate, or use commas."
         user_prompt = f" {message}"
         max_tokens = 150
 
@@ -178,7 +178,7 @@ class AI(commands.Cog):
         response = openai.Completion.create(
         model="text-davinci-003",
         prompt=default_prompt + user_prompt,
-        temperature=0.9,
+        temperature=1,
         max_tokens=max_tokens,
         presence_penalty=0
         )
