@@ -24,7 +24,7 @@ class Listeners(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message):
-        num = random.randint(1, 200)
+        num = random.randint(1, 500)
         if num == 69:
             guild = message.author.guild
             role = guild.get_role(829155593322364959)
@@ -165,6 +165,14 @@ class Listeners(commands.Cog):
                     await message.channel.send("your days are numbered...")
             if "balls" in msg:
                 await message.channel.send("Can I put my balls in your jaws?")
+            if "you're crazy" in msg:
+                text = "I am not crazy! I know he swapped those numbers! I knew it was 1216. One after Magna Carta. As if I could ever make such a mistake. Never. Never! I just – I just couldn't prove it. He – he covered his tracks, he got that idiot at the copy shop to lie for him. You think this is something? You think this is bad? This? This chicanery? He's done worse. That billboard! Are you telling me that a man just happens to fall like that? No! He orchestrated it! Jimmy! He defecated through a sunroof! And I saved him! And I shouldn't have. I took him into my own firm! What was I thinking? He'll never change. He'll never change! Ever since he was 9, always the same! Couldn't keep his hands out of the cash drawer! But not our Jimmy! Couldn't be precious Jimmy! Stealing them blind! And he gets to be a lawyer!? What a sick joke! I should've stopped him when I had the chance! And you – you have to stop him!"
+                await message.channel.send(text)
+            if "dick" in msg:
+                text = "Dick's Sporting Goods, Inc. is an American sporting goods retail company, based in Coraopolis, Pennsylvania. The company was established by Richard \"Dick\" Stack in 1948, and has approximately 854 stores and 50,100 employees. Dick's is America's largest sporting goods retailer, and it is listed on the Fortune 500."
+                await message.channel.send(text)
+            if "stop pinging" in msg:
+                await message.reply("https://remote-tools-images.s3.amazonaws.com/leavediscord/7new+(2).jpg")
         if (message.author.id == 292448459909365760):
             if 'sad' in message.content.strip().lower():
                 await message.channel.send("<:zzwhoops_cries:813585484441714698>")

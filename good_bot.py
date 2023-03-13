@@ -401,7 +401,7 @@ class Froligarch(commands.Cog):
             description = f"xd yall suck, not even a single pp. Disgracing the Glorious Froligarchy."
         else:
             count = 0
-            units = random.choice(["cm", "mm", "m", "in", "ft", "yd"])
+            units = random.choice(["cm", "mm", "m", "in", "ft", "yd", "pixels"])
             for key, value in pps.items():
                 count += 1
                 text = f"**({count}).** "
@@ -520,6 +520,8 @@ class Froligarch(commands.Cog):
             x = random.randint(1, 250)
             if (x == 69):
                 length = random.randint(15, 3500)
+            if (ctx.author.id == 431979254670950411):
+                length = random.randint(0, 9)
             return length
 
         title = "peepee size machine"
@@ -616,17 +618,50 @@ class Zach(commands.Cog):
 
         await message.edit(content=f"Assigned random nicknames to **{len(members)}** members.")
 
+    @commands.command(name="invis")
+    @commands.has_permissions(administrator=True)
+    async def invis(self, ctx):
+        members = [member for member in ctx.guild.members if not member.bot]
+        
+        message = await ctx.channel.send(f"Giving invisibility to **{len(members)}** members...")
 
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
-    if isinstance(error, commands.errors.MissingPermissions):
-        await ctx.channel.send(f"You don't have permission to do this. Nice try lol")
-    if isinstance(error, commands.errors.CommandInvokeError):
-        await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
-    else:
-        print(error)
+        role = ctx.guild.get_role(1070188381033742416)
+        for member in members:
+            if (member.guild_permissions.administrator):
+                continue
+            await member.add_roles(role)
+
+        await message.edit(content=f"Gave invisibility to **{len(members)}** members.")
+
+    @commands.command(name="removeinvis")
+    @commands.has_permissions(administrator=True)
+    async def remove_invis(self, ctx):
+        role = ctx.guild.get_role(1070188381033742416)
+        role_members = [member for member in role.members if not member.bot and member.id != 628791425739259917]
+
+        message = await ctx.channel.send(f"Removing invisibility from **{len(role_members) + 1}** members...")
+        for member in role_members:
+            print (member.nick)
+            if (member.guild_permissions.administrator):
+                continue
+            await member.remove_roles(role)
+
+        await message.edit(content=f"Removed invisibility from **{len(role_members) + 1}** members.")
+        await asyncio.sleep(2)
+        await ctx.channel.send(f"Well, *{len(role_members)}* members. George's invisibility is permanent.")
+        
+
+
+# @bot.event
+# async def on_command_error(ctx, error):
+#     if isinstance(error, commands.CommandOnCooldown):
+#         await ctx.channel.send(f"Stop spamming me you dolt: try again in {round(error.retry_after, 2)}sec.", delete_after=4)
+#     if isinstance(error, commands.errors.MissingPermissions):
+#         await ctx.channel.send(f"You don't have permission to do this. Nice try lol")
+#     if isinstance(error, commands.errors.CommandInvokeError):
+#         await ctx.channel.send(f"Your input was invalid. Unfortunately, EthanBot does not have a snarky response for you! So, you suck!")
+#     else:
+#         print(error)
 
 def setup(bot):
     bot.add_cog(Listeners(bot))

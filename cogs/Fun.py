@@ -196,3 +196,11 @@ class Fun(commands.Cog):
         embed = nextcord.Embed(title=title, description=description)
 
         await ctx.channel.send(embed=embed)
+
+
+    @commands.command(name="OHGODSITHINKWEAREHAVINGANOTHERFROLIGARCHYARGUMENTPLEASEMAKEITSTOP", aliases=["CODESHITSTORMIREPEATCODESHITSTORMWEAREINNEEDOFADEFUSAL"])
+    @commands.cooldown(1, 25, commands.BucketType.user)
+    async def oh_gods(self, ctx):
+        text = "​\n" * 998
+        for x in range(10):
+            await ctx.channel.send(text)
