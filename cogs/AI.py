@@ -19,7 +19,7 @@ class AI(commands.Cog):
         data = {
             "$inc": {
                 "tokens_used": usage,
-                "money_spent": usage / 5000,
+                "money_spent": usage / 500000,
                 "eai_gen": 1 if type == "eai" else 0,
                 "nai_gen": 1 if type == "nai" else 0,
                 "lai_gen": 1 if type == "lai" else 0,
